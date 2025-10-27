@@ -1,0 +1,165 @@
+/* Resume Builder Styles - ATS Optimized */
+
+/* ATS-friendly typography */
+.resume-container {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 8.5in;
+  height: auto;
+  background-color: white;
+  color: #333;
+  line-height: 1.5;
+}
+
+.resume-section {
+  margin-bottom: 0.5rem;
+  page-break-inside: avoid;
+}
+
+.resume-header {
+  border-bottom: 2px solid #333;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.resume-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.resume-entry {
+  margin-bottom: 0.5rem;
+  page-break-inside: avoid;
+}
+
+.resume-entry-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.resume-entry-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.resume-entry-subtitle {
+  font-style: italic;
+  color: #555;
+}
+
+.resume-entry-date {
+  font-weight: 600;
+  color: #333;
+}
+
+.resume-entry-location {
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.resume-entry-description {
+  color: #444;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-top: 0.25rem;
+  white-space: pre-wrap;
+}
+
+.resume-skills-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.resume-skill-item {
+  page-break-inside: avoid;
+}
+
+.resume-skill-category {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.resume-skill-items {
+  color: #555;
+  font-size: 0.9rem;
+}
+
+/* Puck Editor Integration Styles */
+.puck-editor {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+}
+
+.puck-preview {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  background-color: #f5f5f5;
+}
+
+.puck-preview-inner {
+  margin: 0 auto;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Print Styles for ATS Compatibility */
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+
+  .resume-container {
+    box-shadow: none;
+    max-width: 100%;
+  }
+
+  .puck-editor,
+  .puck-toolbar,
+  .puck-sidebar {
+    display: none;
+  }
+
+  .resume-section {
+    page-break-inside: avoid;
+  }
+
+  .resume-entry {
+    page-break-inside: avoid;
+  }
+
+  /* Ensure text is black for better ATS scanning */
+  * {
+    color: #000 !important;
+    background: white !important;
+  }
+
+  a {
+    text-decoration: underline;
+    color: #000 !important;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .resume-entry-header {
+    flex-direction: column;
+  }
+
+  .resume-skills-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Focus states for accessibility */
+.resume-component:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}
