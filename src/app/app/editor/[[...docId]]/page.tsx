@@ -24,6 +24,7 @@ export default function EditorPage() {
       {
         type: "ResumeHeader",
         props: {
+          id: "header-1",
           fullName: "John Doe",
           email: "john.doe@email.com",
           phone: "+1 (555) 123-4567",
@@ -35,6 +36,7 @@ export default function EditorPage() {
       {
         type: "ResumeSummary",
         props: {
+          id: "summary-1",
           title: "PROFESSIONAL SUMMARY",
           content:
             "Results-driven Software Engineer with 5+ years of experience building scalable web applications. Proven expertise in React, TypeScript, and cloud technologies. Strong track record of delivering high-impact solutions and mentoring junior developers.",
@@ -43,6 +45,7 @@ export default function EditorPage() {
       {
         type: "ResumeExperience",
         props: {
+          id: "experience-1",
           title: "WORK EXPERIENCE",
           experiences: [
             {
@@ -69,6 +72,7 @@ export default function EditorPage() {
       {
         type: "ResumeEducation",
         props: {
+          id: "education-1",
           title: "EDUCATION",
           education: [
             {
@@ -84,6 +88,7 @@ export default function EditorPage() {
       {
         type: "ResumeSkills",
         props: {
+          id: "skills-1",
           title: "SKILLS",
           skills: [
             {
@@ -108,6 +113,7 @@ export default function EditorPage() {
       {
         type: "ResumeCertifications",
         props: {
+          id: "certifications-1",
           title: "CERTIFICATIONS",
           certifications: [
             {
