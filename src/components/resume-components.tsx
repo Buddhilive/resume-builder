@@ -19,16 +19,16 @@ export const ResumeHeader: React.FC<{
   linkedin = "linkedin.com/in/yourprofile",
 }) => {
   return (
-    <div className="mb-6 border-b-2 border-gray-300 pb-4">
-      <h1 className="text-3xl font-bold text-gray-900">{fullName}</h1>
-      <div className="mt-2 flex flex-wrap gap-3 text-sm text-gray-700">
+    <div className="mb-6 border-b-2 border-border pb-4">
+      <h1 className="text-3xl font-bold text-foreground">{fullName}</h1>
+      <div className="mt-2 flex flex-wrap gap-3 text-sm text-muted-foreground">
         {email && <span>{email}</span>}
         {phone && <span>•</span>}
         {phone && <span>{phone}</span>}
         {location && <span>•</span>}
         {location && <span>{location}</span>}
       </div>
-      <div className="mt-1 flex flex-wrap gap-3 text-sm text-gray-700">
+      <div className="mt-1 flex flex-wrap gap-3 text-sm text-muted-foreground">
         {website && <span>{website}</span>}
         {linkedin && <span>•</span>}
         {linkedin && <span>{linkedin}</span>}
@@ -44,8 +44,8 @@ export const ResumeSummary: React.FC<{
 }> = ({ title = "PROFESSIONAL SUMMARY", content = "" }) => {
   return (
     <div className="mb-6">
-      <h2 className="mb-2 text-lg font-bold text-gray-900">{title}</h2>
-      <p className="text-sm leading-relaxed text-gray-800">{content}</p>
+      <h2 className="mb-2 text-lg font-bold text-foreground">{title}</h2>
+      <p className="text-sm leading-relaxed text-foreground">{content}</p>
     </div>
   );
 };
@@ -76,22 +76,22 @@ export const ResumeExperience: React.FC<{
 }) => {
   return (
     <div className="mb-6">
-      <h2 className="mb-3 text-lg font-bold text-gray-900">{title}</h2>
+      <h2 className="mb-3 text-lg font-bold text-foreground">{title}</h2>
       {experiences?.map((exp, idx) => (
-        <div key={idx} className="mb-4 text-sm text-gray-800">
+        <div key={idx} className="mb-4 text-sm text-foreground">
           <div className="flex justify-between">
             <div>
-              <p className="font-semibold text-gray-900">{exp.jobTitle}</p>
-              <p className="text-gray-700">{exp.company}</p>
+              <p className="font-semibold text-foreground">{exp.jobTitle}</p>
+              <p className="text-muted-foreground">{exp.company}</p>
             </div>
             <div className="text-right">
-              <p className="font-semibold text-gray-900">
+              <p className="font-semibold text-foreground">
                 {exp.startDate} - {exp.endDate}
               </p>
-              <p className="text-gray-700">{exp.location}</p>
+              <p className="text-muted-foreground">{exp.location}</p>
             </div>
           </div>
-          <p className="mt-2 whitespace-pre-wrap text-gray-700">
+          <p className="mt-2 whitespace-pre-wrap text-muted-foreground">
             {exp.description}
           </p>
         </div>
@@ -124,18 +124,18 @@ export const ResumeEducation: React.FC<{
 }) => {
   return (
     <div className="mb-6">
-      <h2 className="mb-3 text-lg font-bold text-gray-900">{title}</h2>
+      <h2 className="mb-3 text-lg font-bold text-foreground">{title}</h2>
       {education?.map((edu, idx) => (
-        <div key={idx} className="mb-3 text-sm text-gray-800">
+        <div key={idx} className="mb-3 text-sm text-foreground">
           <div className="flex justify-between">
             <div>
-              <p className="font-semibold text-gray-900">{edu.degree}</p>
-              <p className="text-gray-700">{edu.school}</p>
-              <p className="text-gray-700">{edu.field}</p>
+              <p className="font-semibold text-foreground">{edu.degree}</p>
+              <p className="text-muted-foreground">{edu.school}</p>
+              <p className="text-muted-foreground">{edu.field}</p>
             </div>
             <div className="text-right">
-              <p className="font-semibold text-gray-900">{edu.graduationDate}</p>
-              {edu.gpa && <p className="text-gray-700">GPA: {edu.gpa}</p>}
+              <p className="font-semibold text-foreground">{edu.graduationDate}</p>
+              {edu.gpa && <p className="text-muted-foreground">GPA: {edu.gpa}</p>}
             </div>
           </div>
         </div>
@@ -162,11 +162,11 @@ export const ResumeSkills: React.FC<{
 }) => {
   return (
     <div className="mb-6">
-      <h2 className="mb-3 text-lg font-bold text-gray-900">{title}</h2>
+      <h2 className="mb-3 text-lg font-bold text-foreground">{title}</h2>
       {skills?.map((skill, idx) => (
-        <div key={idx} className="mb-2 text-sm text-gray-800">
-          <p className="font-semibold text-gray-900">{skill.category}:</p>
-          <p className="text-gray-700">{skill.items}</p>
+        <div key={idx} className="mb-2 text-sm text-foreground">
+          <p className="font-semibold text-foreground">{skill.category}:</p>
+          <p className="text-muted-foreground">{skill.items}</p>
         </div>
       ))}
     </div>
@@ -193,15 +193,15 @@ export const ResumeCertifications: React.FC<{
 }) => {
   return (
     <div className="mb-6">
-      <h2 className="mb-3 text-lg font-bold text-gray-900">{title}</h2>
+      <h2 className="mb-3 text-lg font-bold text-foreground">{title}</h2>
       {certifications?.map((cert, idx) => (
-        <div key={idx} className="mb-2 text-sm text-gray-800">
+        <div key={idx} className="mb-2 text-sm text-foreground">
           <div className="flex justify-between">
             <div>
-              <p className="font-semibold text-gray-900">{cert.name}</p>
-              <p className="text-gray-700">{cert.issuer}</p>
+              <p className="font-semibold text-foreground">{cert.name}</p>
+              <p className="text-muted-foreground">{cert.issuer}</p>
             </div>
-            <p className="font-semibold text-gray-900">{cert.date}</p>
+            <p className="font-semibold text-foreground">{cert.date}</p>
           </div>
         </div>
       ))}

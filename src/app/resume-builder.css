@@ -5,8 +5,8 @@
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   max-width: 8.5in;
   height: auto;
-  background-color: white;
-  color: #333;
+  background-color: var(--card);
+  color: var(--foreground);
   line-height: 1.5;
 }
 
@@ -16,7 +16,7 @@
 }
 
 .resume-header {
-  border-bottom: 2px solid #333;
+  border-bottom: 2px solid var(--border);
   padding-bottom: 0.5rem;
   margin-bottom: 0.75rem;
 }
@@ -47,21 +47,21 @@
 
 .resume-entry-subtitle {
   font-style: italic;
-  color: #555;
+  color: var(--muted-foreground);
 }
 
 .resume-entry-date {
   font-weight: 600;
-  color: #333;
+  color: var(--foreground);
 }
 
 .resume-entry-location {
-  color: #555;
+  color: var(--muted-foreground);
   font-size: 0.9rem;
 }
 
 .resume-entry-description {
-  color: #444;
+  color: var(--muted-foreground);
   font-size: 0.9rem;
   line-height: 1.4;
   margin-top: 0.25rem;
@@ -84,7 +84,7 @@
 }
 
 .resume-skill-items {
-  color: #555;
+  color: var(--muted-foreground);
   font-size: 0.9rem;
 }
 
@@ -107,22 +107,22 @@
 
 .puck .puck-editor {
   grid-area: editor !important;
-  background: #f8fafc !important;
+  background: var(--background) !important;
   padding: 2rem !important;
   overflow-y: auto !important;
 }
 
 /* Style the component library sidebar */
 .puck .puck-layout-left {
-  background: #ffffff !important;
-  border-right: 1px solid #e2e8f0 !important;
+  background: var(--card) !important;
+  border-right: 1px solid var(--border) !important;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05) !important;
 }
 
 /* Style the properties sidebar */
 .puck .puck-layout-right {
-  background: #ffffff !important;
-  border-left: 1px solid #e2e8f0 !important;
+  background: var(--card) !important;
+  border-left: 1px solid var(--border) !important;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.05) !important;
 }
 
@@ -130,13 +130,13 @@
 .puck .puck-component {
   margin-bottom: 0.5rem !important;
   border-radius: 8px !important;
-  border: 1px solid #e2e8f0 !important;
-  background: #ffffff !important;
+  border: 1px solid var(--border) !important;
+  background: var(--card) !important;
   transition: all 0.2s ease !important;
 }
 
 .puck .puck-component:hover {
-  border-color: #3b82f6 !important;
+  border-color: var(--primary) !important;
   box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15) !important;
 }
 
@@ -149,12 +149,12 @@
 }
 
 .puck [data-puck-component-type]:hover {
-  border-color: #3b82f6 !important;
+  border-color: var(--primary) !important;
   background: rgba(59, 130, 246, 0.05) !important;
 }
 
 .puck [data-puck-component-type].puck-selected {
-  border-color: #3b82f6 !important;
+  border-color: var(--primary) !important;
   background: rgba(59, 130, 246, 0.1) !important;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2) !important;
 }
@@ -166,13 +166,13 @@
 
 .puck .puck-field label {
   font-weight: 600 !important;
-  color: #374151 !important;
+  color: var(--foreground) !important;
   margin-bottom: 0.5rem !important;
 }
 
 .puck .puck-field input,
 .puck .puck-field textarea {
-  border: 1px solid #d1d5db !important;
+  border: 1px solid var(--border) !important;
   border-radius: 6px !important;
   padding: 0.5rem !important;
   font-size: 0.875rem !important;
@@ -181,14 +181,14 @@
 
 .puck .puck-field input:focus,
 .puck .puck-field textarea:focus {
-  border-color: #3b82f6 !important;
+  border-color: var(--primary) !important;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
   outline: none !important;
 }
 
 /* Editor canvas styling */
 .puck .puck-editor-canvas {
-  background: white !important;
+  background: var(--card) !important;
   border-radius: 8px !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
   padding: 2rem !important;

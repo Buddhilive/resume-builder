@@ -452,11 +452,11 @@ export default function EditorPage() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-gray-50">
+    <div className="flex h-screen flex-col bg-background">
       {/* Loading overlay for document loading */}
       {isLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 flex items-center gap-3">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card rounded-lg p-6 flex items-center gap-3">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span>Loading resume...</span>
           </div>
@@ -464,17 +464,17 @@ export default function EditorPage() {
       )}
 
       {/* Top Toolbar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Left Section - Document Info */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <FileText className="h-5 w-5 text-gray-600" />
+              <FileText className="h-5 w-5 text-muted-foreground" />
               <input
                 type="text"
                 value={documentName}
                 onChange={(e) => setDocumentName(e.target.value)}
-                className="font-semibold text-gray-900 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white px-2 py-1 rounded"
+                className="font-semibold text-foreground bg-transparent border-none outline-none focus:ring-2 focus:ring-primary focus:bg-background px-2 py-1 rounded"
                 onBlur={handleSave}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -482,14 +482,14 @@ export default function EditorPage() {
                   }
                 }}
               />
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-muted-foreground">
                 • Last saved {Math.floor((Date.now() - lastSaved.getTime()) / 60000) || 0} mins ago
                 • {data.content.length} sections
                 {currentDocument && (
                   <>
                     • Created {currentDocument.createdAt.toLocaleDateString()}
                     {!isNewDocument && (
-                      <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                      <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded dark:bg-green-900/40 dark:text-green-300">
                         Saved
                       </span>
                     )}
@@ -515,7 +515,7 @@ export default function EditorPage() {
             
             {/* Recent changes indicator */}
             {changeLog.length > 0 && (
-              <div className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">
+              <div className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded">
                 Last: {changeLog[changeLog.length - 1]?.action}
               </div>
             )}
@@ -526,7 +526,7 @@ export default function EditorPage() {
                 onClick={() => setShowDeleteConfirm(true)}
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30"
                 disabled={isDeleting}
               >
                 <Trash2 className="h-4 w-4" />
@@ -575,14 +575,14 @@ export default function EditorPage() {
 
         {/* PDF Export Error Display */}
         {exportError && (
-          <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md flex items-center gap-2">
+          <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md flex items-center gap-2 dark:bg-red-950/30 dark:border-red-800">
             <AlertCircle className="h-4 w-4 text-red-500" />
-            <span className="text-sm text-red-700">{exportError}</span>
+            <span className="text-sm text-red-700 dark:text-red-300">{exportError}</span>
             <Button
               onClick={clearError}
               variant="ghost"
               size="sm"
-              className="ml-auto text-red-500 hover:text-red-700"
+              className="ml-auto text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
             >
               ✕
             </Button>
@@ -592,12 +592,12 @@ export default function EditorPage() {
 
       {/* Editor Area */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 bg-white">
+        <div className="flex-1 bg-background">
           {isLoading || !isDataReady ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-                <p className="text-gray-600">
+                <p className="text-muted-foreground">
                   {isLoading ? "Loading resume editor..." : "Preparing data..."}
                 </p>
               </div>
