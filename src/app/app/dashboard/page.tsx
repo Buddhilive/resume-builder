@@ -116,23 +116,23 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="flex items-center gap-3">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span className="text-lg">Loading resumes...</span>
+          <span className="text-lg text-gray-900 dark:text-gray-100">Loading resumes...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Resumes</h1>
-            <p className="text-gray-600">Manage and edit your resume documents</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">My Resumes</h1>
+            <p className="text-gray-600 dark:text-gray-400">Manage and edit your resume documents</p>
           </div>
           <Link href="/app/editor">
             <Button className="flex items-center gap-2">
@@ -144,10 +144,10 @@ export default function DashboardPage() {
 
         {/* Empty state */}
         {resumes.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-            <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No resumes yet</h3>
-            <p className="text-gray-600 mb-6">Create your first resume to get started</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
+            <FileText className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No resumes yet</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">Create your first resume to get started</p>
             <Link href="/app/editor">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
@@ -158,10 +158,10 @@ export default function DashboardPage() {
         ) : (
           <>
             {/* Controls */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium text-gray-700">Sort by:</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Sort by:</span>
                   <Select value={sortBy} onValueChange={setSortBy}>
                     <SelectTrigger className="w-40">
                       <SelectValue />
@@ -173,14 +173,14 @@ export default function DashboardPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
                   {resumes.length} resume{resumes.length !== 1 ? 's' : ''}
                 </div>
               </div>
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -195,19 +195,19 @@ export default function DashboardPage() {
                     <TableRow key={resume.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <FileText className="h-5 w-5 text-blue-600" />
+                          <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                           <Link 
                             href={`/app/editor/${resume.id}`}
-                            className="font-medium text-gray-900 hover:text-blue-600"
+                            className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400"
                           >
                             {resume.name}
                           </Link>
                         </div>
                       </TableCell>
-                      <TableCell className="text-gray-600">
+                      <TableCell className="text-gray-600 dark:text-gray-400">
                         {formatDate(resume.createdAt)}
                       </TableCell>
-                      <TableCell className="text-gray-600">
+                      <TableCell className="text-gray-600 dark:text-gray-400">
                         {formatDate(resume.modifiedAt)}
                       </TableCell>
                       <TableCell className="text-right">
@@ -226,7 +226,7 @@ export default function DashboardPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleDelete(resume)}
-                            className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                            className="flex items-center gap-1 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                           >
                             <Trash2 className="h-3 w-3" />
                             Delete
