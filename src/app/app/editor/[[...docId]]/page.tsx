@@ -1,21 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Puck, Config } from "@measured/puck";
 import "@measured/puck/puck.css";
 import { puckConfig } from "@/lib/puck-config";
 import { PreviewModal } from "@/components/preview-modal";
 import { ATSValidator } from "@/components/ats-validator";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { 
   Eye, 
   Save, 
   Download, 
   FileText, 
-  Settings, 
-  Undo2, 
-  Redo2
+  Settings
 } from "lucide-react";
 
 export default function EditorPage() {
@@ -136,20 +133,181 @@ export default function EditorPage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [atsScore, setAtsScore] = useState(85);
+  const [lastSaved, setLastSaved] = useState(new Date());
 
-  console.log("Current ATS Score:", atsScore); // Use the score
+  // Track changes for better debugging and analytics
+  const [changeLog, setChangeLog] = useState<Array<{
+    timestamp: number;
+    action: string;
+    componentType?: string;
+    componentId?: string;
+  }>>([]);
+
+  // Log changes for debugging and analytics
+  const logChange = (action: string, componentType?: string, componentId?: string) => {
+    const logEntry = {
+      timestamp: Date.now(),
+      action,
+      componentType,
+      componentId,
+    };
+    setChangeLog(prev => [...prev, logEntry]);
+    console.log("Resume change:", logEntry);
+  };
+
+  console.log("Current ATS Score:", atsScore);
+  console.log("Total components:", data.content.length);
+
+  // Effect to handle data changes and trigger ATS recalculation
+  useEffect(() => {
+    // This will trigger the ATS validator to recalculate when data changes
+    // The ATSValidator component will automatically update the score via onScoreChange
+    console.log("Resume data changed, components:", data.content.map(c => ({
+      type: c.type,
+      id: c.props?.id
+    })));
+  }, [data]);
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate save
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    console.log("Resume saved:", data);
-    setIsSaving(false);
+    try {
+      // Simulate save operation with actual data persistence logic
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Update last saved time
+      setLastSaved(new Date());
+      
+      // Log the save action
+      logChange("save", undefined, undefined);
+      
+      console.log("Resume saved successfully:", {
+        componentCount: data.content.length,
+        timestamp: new Date().toISOString(),
+        data
+      });
+      
+      // Here you would typically make an API call to save the data
+      // await saveResumeData(data);
+      
+    } catch (error) {
+      console.error("Failed to save resume:", error);
+      // Handle save error (show toast notification, etc.)
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleExport = () => {
-    // Export functionality
-    console.log("Exporting resume...");
+    // Export functionality with updated data
+    logChange("export", undefined, undefined);
+    console.log("Exporting resume with", data.content.length, "components");
+    // Here you would implement actual PDF export logic
+  };
+
+  // Enhanced onChange handler to track component changes and deletions
+  const handlePuckChange = (newData: typeof data) => {
+    const previousContent = data.content;
+    const newContent = newData.content;
+    
+    // Create detailed change summary
+    const changeSummary = {
+      previous: {
+        count: previousContent.length,
+        components: previousContent.map(c => ({ type: c.type, id: c.props?.id }))
+      },
+      new: {
+        count: newContent.length,
+        components: newContent.map(c => ({ type: c.type, id: c.props?.id }))
+      },
+      changes: [] as Array<{type: string, action: string, component?: string, id?: string}>
+    };
+    
+    // Check for component deletions
+    if (previousContent.length > newContent.length) {
+      const deletedComponents = previousContent.filter(prevItem => 
+        !newContent.some(newItem => newItem.props?.id === prevItem.props?.id)
+      );
+      
+      deletedComponents.forEach(component => {
+        const changeInfo = {
+          type: "component",
+          action: "delete",
+          component: component.type,
+          id: component.props?.id
+        };
+        changeSummary.changes.push(changeInfo);
+        logChange("delete", component.type, component.props?.id);
+        console.log(`🗑️ Component deleted: ${component.type} (${component.props?.id})`);
+      });
+    }
+    
+    // Check for component additions
+    if (newContent.length > previousContent.length) {
+      const addedComponents = newContent.filter(newItem => 
+        !previousContent.some(prevItem => prevItem.props?.id === newItem.props?.id)
+      );
+      
+      addedComponents.forEach(component => {
+        const changeInfo = {
+          type: "component",
+          action: "add",
+          component: component.type,
+          id: component.props?.id
+        };
+        changeSummary.changes.push(changeInfo);
+        logChange("add", component.type, component.props?.id);
+        console.log(`➕ Component added: ${component.type} (${component.props?.id})`);
+      });
+    }
+    
+    // Check for component modifications (content or prop changes)
+    newContent.forEach(newItem => {
+      const correspondingPrevItem = previousContent.find(
+        prevItem => prevItem.props?.id === newItem.props?.id
+      );
+      
+      if (correspondingPrevItem) {
+        // Deep comparison of props to detect changes
+        const hasPropsChanged = JSON.stringify(correspondingPrevItem.props) !== JSON.stringify(newItem.props);
+        
+        if (hasPropsChanged) {
+          const changeInfo = {
+            type: "component",
+            action: "modify",
+            component: newItem.type,
+            id: newItem.props?.id
+          };
+          changeSummary.changes.push(changeInfo);
+          logChange("modify", newItem.type, newItem.props?.id);
+          console.log(`✏️ Component modified: ${newItem.type} (${newItem.props?.id})`);
+          
+          // Log specific field changes for better debugging
+          const prevProps = correspondingPrevItem.props as Record<string, unknown> || {};
+          const newProps = newItem.props as Record<string, unknown> || {};
+          const changedFields = Object.keys(newProps).filter(key => 
+            JSON.stringify(prevProps[key]) !== JSON.stringify(newProps[key])
+          );
+          
+          if (changedFields.length > 0) {
+            console.log(`   Changed fields: ${changedFields.join(', ')}`);
+          }
+        }
+      }
+    });
+    
+    // Log overall change summary if there were any changes
+    if (changeSummary.changes.length > 0) {
+      console.log("📊 Change Summary:", changeSummary);
+    }
+    
+    // Update the data state
+    setData(newData);
+    
+    console.log('Resume data updated:', {
+      totalComponents: newData.content.length,
+      timestamp: new Date().toISOString(),
+      hasChanges: changeSummary.changes.length > 0
+    });
   };
 
   return (
@@ -162,29 +320,15 @@ export default function EditorPage() {
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-gray-600" />
               <span className="font-semibold text-gray-900">My Resume</span>
-              <span className="text-sm text-gray-500">• Last saved 2 mins ago</span>
+              <span className="text-sm text-gray-500">
+                • Last saved {Math.floor((Date.now() - lastSaved.getTime()) / 60000) || 0} mins ago
+                • {data.content.length} sections
+              </span>
             </div>
           </div>
 
           {/* Center Section - Actions */}
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Undo2 className="h-4 w-4" />
-              Undo
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Redo2 className="h-4 w-4" />
-              Redo
-            </Button>
-            <Separator orientation="vertical" className="h-6" />
             <Button
               onClick={() => setIsPreviewOpen(true)}
               variant="outline"
@@ -214,8 +358,14 @@ export default function EditorPage() {
             </Button>
           </div>
 
-          {/* Right Section - Settings */}
+          {/* Right Section - Settings and Debug Info */}
           <div className="flex items-center gap-2">
+            {/* Recent changes indicator */}
+            {changeLog.length > 0 && (
+              <div className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">
+                Last: {changeLog[changeLog.length - 1]?.action}
+              </div>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -243,12 +393,16 @@ export default function EditorPage() {
             config={puckConfig as Config}
             data={data}
             onPublish={(publishData) => {
-              setData(publishData);
-              console.log("Resume saved:", publishData);
+              handlePuckChange(publishData);
+              handleSave(); // Auto-save on publish
+              console.log("Resume published:", publishData);
             }}
             ui={{
               leftSideBarVisible: true,
               rightSideBarVisible: true,
+            }}
+            onChange={(newData) => {
+              handlePuckChange(newData);
             }}
           />
         </div>
