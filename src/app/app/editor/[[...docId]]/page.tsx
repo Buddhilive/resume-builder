@@ -6,7 +6,7 @@ import { Puck, Config } from "@measured/puck";
 import "@measured/puck/puck.css";
 import { puckConfig } from "@/lib/puck-config";
 import { PreviewModal } from "@/components/preview-modal";
-import { ATSValidator } from "@/components/ats-validator";
+// import { ATSValidator } from "@/components/ats-validator";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { usePDFExport } from "@/hooks/use-pdf-export";
@@ -142,7 +142,7 @@ export default function EditorPage() {
 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [atsScore, setAtsScore] = useState(85);
+  // const [atsScore, setAtsScore] = useState(85);
   const [lastSaved, setLastSaved] = useState(new Date());
 
   // PDF Export functionality
@@ -167,20 +167,6 @@ export default function EditorPage() {
     setChangeLog(prev => [...prev, logEntry]);
     console.log("Resume change:", logEntry);
   };
-
-  console.log("Current ATS Score:", atsScore);
-  console.log("Total components:", data.content.length);
-  console.log("Current data state for Puck:", {
-    hasContent: !!data.content,
-    contentLength: data.content?.length || 0,
-    hasRoot: !!data.root,
-    rootKeys: Object.keys(data.root || {}),
-    documentId: documentId,
-    isLoading: isLoading,
-    isDataReady: isDataReady,
-    currentDocument: currentDocument?.id,
-    puckKey: documentId || 'new-document'
-  });
 
   // Add effect to track data changes
   React.useEffect(() => {
@@ -507,7 +493,7 @@ export default function EditorPage() {
                 onClick={addTestData}
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-2 bg-yellow-50 border-yellow-200 text-yellow-800"
+                className="flex items-center gap-2"
               >
                 🧪 Add Test Data
               </Button>
@@ -566,12 +552,12 @@ export default function EditorPage() {
         </div>
 
         {/* ATS Validator Row */}
-        <div className="mt-4">
+        {/* <div className="mt-4">
           <ATSValidator 
             resumeData={data} 
             onScoreChange={setAtsScore}
           />
-        </div>
+        </div> */}
 
         {/* PDF Export Error Display */}
         {exportError && (
