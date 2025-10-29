@@ -2,7 +2,9 @@
 
 import * as React from "react"
 import {
+  FilePlus,
   FileUser,
+  Home,
   LayoutDashboard,
 } from "lucide-react"
 
@@ -34,18 +36,28 @@ const data = {
   ],
   navMain: [
     {
+      title: "Home",
+      url: "/",
+      icon: Home,
+      isActive: true,
+    },
+    {
       title: "Dashboard",
       url: "/app/dashboard",
       icon: LayoutDashboard,
-      isActive: true,
+    },
+    {
+      title: "New Resume",
+      url: "/app/editor",
+      icon: FilePlus,
     },
   ],
   projects: [
-    {
+    /* {
       name: "Design Engineering",
       url: "#",
       icon: FileUser,
-    },
+    }, */
   ],
 }
 
