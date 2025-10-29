@@ -9,6 +9,7 @@ import { ATSValidator } from "@/components/ats-validator";
 import { Button } from "@/components/ui/button";
 import { usePDFExport } from "@/hooks/use-pdf-export";
 import PDFExportTestButton from "@/components/pdf-export-test";
+import PDFExportColorTest from "@/components/pdf-export-color-test";
 import { 
   Eye, 
   Save, 
@@ -399,6 +400,9 @@ export default function EditorPage() {
             
             {/* PDF Export Test Button (for development) */}
             <PDFExportTestButton />
+            
+            {/* Color Conversion Test (for development) */}
+            <PDFExportColorTest />
             
             <Button
               variant="ghost"

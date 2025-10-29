@@ -2,6 +2,7 @@
 
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { ColorConverter } from './color-converter';
 
 export interface PDFOptions {
   filename?: string;
@@ -103,9 +104,18 @@ export class PDFExporter {
   ): Promise<void> {
     const config = { ...this.DEFAULT_OPTIONS, ...options };
 
+    // Store original styles for restoration
+    let injectedStyleElement: HTMLStyleElement | null = null;
+    let originalStyles: Map<HTMLElement, string> = new Map();
+
     try {
       // Show loading state
       this.showLoadingState(true);
+
+      // Apply color conversion to the original element (temporarily)
+      const conversionResult = await this.convertColorsInElement(element);
+      injectedStyleElement = conversionResult.injectedStyleElement;
+      originalStyles = conversionResult.originalStyles;
 
       // Create high-quality canvas from the element
       const canvas = await html2canvas(element, {
@@ -118,6 +128,12 @@ export class PDFExporter {
         height: element.scrollHeight,
         windowWidth: element.scrollWidth,
         windowHeight: element.scrollHeight,
+        ignoreElements: (element) => {
+          // Ignore loading overlays and modals
+          return element.id === 'pdf-export-loader' || 
+                 element.classList.contains('modal') ||
+                 element.classList.contains('overlay');
+        },
       });
 
       // Calculate PDF dimensions
@@ -206,6 +222,14 @@ export class PDFExporter {
       console.error('Error exporting PDF:', error);
       throw new Error('Failed to export PDF. Please try again.');
     } finally {
+      // Cleanup: restore original styles and remove injected stylesheets
+      this.restoreOriginalStyles(originalStyles);
+      
+      if (injectedStyleElement && injectedStyleElement.parentNode) {
+        injectedStyleElement.parentNode.removeChild(injectedStyleElement);
+        console.log('Removed injected stylesheet');
+      }
+      
       this.showLoadingState(false);
     }
   }
@@ -226,11 +250,11 @@ export class PDFExporter {
       tempContainer.style.left = '-9999px';
       tempContainer.style.top = '-9999px';
       tempContainer.style.width = '8.5in';
-      tempContainer.style.backgroundColor = 'white';
+      tempContainer.style.backgroundColor = 'rgb(255, 255, 255)';
       tempContainer.style.fontFamily = 'Arial, sans-serif';
       tempContainer.style.fontSize = '12px';
       tempContainer.style.lineHeight = '1.4';
-      tempContainer.style.color = 'black';
+      tempContainer.style.color = 'rgb(0, 0, 0)';
       tempContainer.style.padding = '40px';
 
       // Add print-specific styles
@@ -239,25 +263,28 @@ export class PDFExporter {
         .temp-resume-container {
           max-width: 8.5in;
           margin: 0 auto;
-          background: white;
-          color: black;
+          background: rgb(255, 255, 255);
+          color: rgb(0, 0, 0);
         }
         .temp-resume-container h1 {
           font-size: 24px;
           margin: 0 0 8px 0;
           font-weight: bold;
+          color: rgb(0, 0, 0);
         }
         .temp-resume-container h2 {
           font-size: 16px;
           margin: 20px 0 10px 0;
           font-weight: bold;
           text-transform: uppercase;
-          border-bottom: 1px solid #333;
+          border-bottom: 1px solid rgb(51, 51, 51);
           padding-bottom: 2px;
+          color: rgb(0, 0, 0);
         }
         .temp-resume-container .contact-info {
           margin-bottom: 20px;
           font-size: 11px;
+          color: rgb(0, 0, 0);
         }
         .temp-resume-container .experience-item {
           margin-bottom: 15px;
@@ -267,10 +294,12 @@ export class PDFExporter {
           justify-content: space-between;
           margin-bottom: 5px;
           font-weight: bold;
+          color: rgb(0, 0, 0);
         }
         .temp-resume-container .experience-description {
           margin-left: 0;
           white-space: pre-line;
+          color: rgb(0, 0, 0);
         }
         .temp-resume-container .skills-grid {
           display: grid;
@@ -282,6 +311,7 @@ export class PDFExporter {
         }
         .temp-resume-container .skill-category strong {
           font-weight: bold;
+          color: rgb(0, 0, 0);
         }
       `;
       document.head.appendChild(style);
@@ -523,6 +553,206 @@ export class PDFExporter {
         right: 15,
       },
     };
+  }
+
+  /**
+   * Convert modern CSS color functions to RGB in an element and its children
+   * This ensures compatibility with html2canvas for PDF export
+   */
+  private static async convertColorsInElement(element: HTMLElement): Promise<{
+    injectedStyleElement: HTMLStyleElement | null;
+    originalStyles: Map<HTMLElement, string>;
+  }> {
+    const originalStyles = new Map<HTMLElement, string>();
+    
+    try {
+      console.log('Starting color conversion for PDF export...');
+      
+      // Store and convert inline styles
+      this.convertInlineStyles(element, originalStyles);
+
+      // Convert all child elements
+      const allElements = element.querySelectorAll('*');
+      console.log(`Converting colors in ${allElements.length} child elements`);
+      
+      allElements.forEach((child) => {
+        if (child instanceof HTMLElement) {
+          this.convertInlineStyles(child, originalStyles);
+        }
+      });
+
+      // Create and inject a style element with converted colors from CSS variables
+      const convertedStyleElement = this.createConvertedStyleSheet();
+      if (convertedStyleElement) {
+        document.head.appendChild(convertedStyleElement);
+        console.log('Injected converted CSS variables stylesheet');
+      }
+
+      console.log('Color conversion completed successfully for PDF export');
+      
+      return {
+        injectedStyleElement: convertedStyleElement,
+        originalStyles
+      };
+    } catch (error) {
+      console.warn('Error during color conversion:', error);
+      // Continue with export even if color conversion fails
+      return {
+        injectedStyleElement: null,
+        originalStyles
+      };
+    }
+  }
+
+  /**
+   * Convert inline styles for a single element
+   */
+  private static convertInlineStyles(element: HTMLElement, originalStyles?: Map<HTMLElement, string>): void {
+    const style = element.style;
+    const stylesToConvert = [
+      'color', 'backgroundColor', 'background', 'borderColor', 
+      'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor',
+      'outline', 'outlineColor', 'textDecorationColor', 'boxShadow', 'textShadow'
+    ];
+
+    let conversionsApplied = 0;
+
+    // Store original style if map is provided
+    if (originalStyles && !originalStyles.has(element)) {
+      originalStyles.set(element, element.getAttribute('style') || '');
+    }
+
+    stylesToConvert.forEach(property => {
+      const value = style.getPropertyValue(property);
+      if (value) {
+        const convertedValue = ColorConverter.parseAndConvertToRgb(value);
+        if (convertedValue !== value) {
+          style.setProperty(property, convertedValue);
+          conversionsApplied++;
+          console.log(`Converted ${property}: ${value} → ${convertedValue}`);
+        }
+      }
+    });
+
+    if (conversionsApplied > 0) {
+      console.log(`Applied ${conversionsApplied} color conversions to element`);
+    }
+  }
+
+  /**
+   * Restore original styles to elements
+   */
+  private static restoreOriginalStyles(originalStyles: Map<HTMLElement, string>): void {
+    try {
+      console.log(`Restoring original styles for ${originalStyles.size} elements`);
+      
+      originalStyles.forEach((originalStyle, element) => {
+        if (originalStyle) {
+          element.setAttribute('style', originalStyle);
+        } else {
+          element.removeAttribute('style');
+        }
+      });
+      
+      console.log('Original styles restored successfully');
+    } catch (error) {
+      console.warn('Error restoring original styles:', error);
+    }
+  }
+
+  /**
+   * Create a style element with converted CSS variables and common styles
+   */
+  private static createConvertedStyleSheet(): HTMLStyleElement | null {
+    try {
+      const styleElement = document.createElement('style');
+      
+      // Define converted CSS variables based on the current theme
+      const convertedCSS = `
+        :root {
+          --background: rgb(255, 255, 255);
+          --foreground: rgb(9, 9, 11);
+          --card: rgb(255, 255, 255);
+          --card-foreground: rgb(9, 9, 11);
+          --popover: rgb(255, 255, 255);
+          --popover-foreground: rgb(9, 9, 11);
+          --primary: rgb(24, 24, 27);
+          --primary-foreground: rgb(250, 250, 250);
+          --secondary: rgb(244, 244, 245);
+          --secondary-foreground: rgb(24, 24, 27);
+          --muted: rgb(244, 244, 245);
+          --muted-foreground: rgb(113, 113, 122);
+          --accent: rgb(244, 244, 245);
+          --accent-foreground: rgb(24, 24, 27);
+          --destructive: rgb(239, 68, 68);
+          --destructive-foreground: rgb(248, 250, 252);
+          --border: rgb(228, 228, 231);
+          --input: rgb(228, 228, 231);
+          --ring: rgb(147, 197, 253);
+          --chart-1: rgb(220, 38, 127);
+          --chart-2: rgb(255, 206, 84);
+          --chart-3: rgb(54, 162, 235);
+          --chart-4: rgb(255, 99, 132);
+          --chart-5: rgb(153, 102, 255);
+        }
+
+        /* Convert common Tailwind utilities that might use modern color functions */
+        .bg-background { background-color: rgb(255, 255, 255) !important; }
+        .text-foreground { color: rgb(9, 9, 11) !important; }
+        .bg-card { background-color: rgb(255, 255, 255) !important; }
+        .text-card-foreground { color: rgb(9, 9, 11) !important; }
+        .bg-primary { background-color: rgb(24, 24, 27) !important; }
+        .text-primary { color: rgb(24, 24, 27) !important; }
+        .text-primary-foreground { color: rgb(250, 250, 250) !important; }
+        .bg-secondary { background-color: rgb(244, 244, 245) !important; }
+        .text-secondary { color: rgb(244, 244, 245) !important; }
+        .text-secondary-foreground { color: rgb(24, 24, 27) !important; }
+        .bg-muted { background-color: rgb(244, 244, 245) !important; }
+        .text-muted { color: rgb(244, 244, 245) !important; }
+        .text-muted-foreground { color: rgb(113, 113, 122) !important; }
+        .bg-accent { background-color: rgb(244, 244, 245) !important; }
+        .text-accent { color: rgb(244, 244, 245) !important; }
+        .text-accent-foreground { color: rgb(24, 24, 27) !important; }
+        .bg-destructive { background-color: rgb(239, 68, 68) !important; }
+        .text-destructive { color: rgb(239, 68, 68) !important; }
+        .text-destructive-foreground { color: rgb(248, 250, 252) !important; }
+        .border-border { border-color: rgb(228, 228, 231) !important; }
+        .border-input { border-color: rgb(228, 228, 231) !important; }
+        .ring-ring { --tw-ring-color: rgb(147, 197, 253) !important; }
+
+        /* Common text colors */
+        .text-black { color: rgb(0, 0, 0) !important; }
+        .text-white { color: rgb(255, 255, 255) !important; }
+        .text-gray-50 { color: rgb(249, 250, 251) !important; }
+        .text-gray-100 { color: rgb(243, 244, 246) !important; }
+        .text-gray-200 { color: rgb(229, 231, 235) !important; }
+        .text-gray-300 { color: rgb(209, 213, 219) !important; }
+        .text-gray-400 { color: rgb(156, 163, 175) !important; }
+        .text-gray-500 { color: rgb(107, 114, 128) !important; }
+        .text-gray-600 { color: rgb(75, 85, 99) !important; }
+        .text-gray-700 { color: rgb(55, 65, 81) !important; }
+        .text-gray-800 { color: rgb(31, 41, 55) !important; }
+        .text-gray-900 { color: rgb(17, 24, 39) !important; }
+
+        /* Common background colors */
+        .bg-white { background-color: rgb(255, 255, 255) !important; }
+        .bg-black { background-color: rgb(0, 0, 0) !important; }
+        .bg-gray-50 { background-color: rgb(249, 250, 251) !important; }
+        .bg-gray-100 { background-color: rgb(243, 244, 246) !important; }
+        .bg-gray-200 { background-color: rgb(229, 231, 235) !important; }
+
+        /* Ensure all text is properly colored for PDF */
+        * {
+          color-scheme: normal !important;
+        }
+      `;
+
+      styleElement.textContent = convertedCSS;
+      return styleElement;
+    } catch (error) {
+      console.warn('Error creating converted stylesheet:', error);
+      return null;
+    }
   }
 }
 
