@@ -10,7 +10,7 @@ import {
 
 import { NavMain } from "@/components/nav-main"
 import { NavProjects } from "@/components/nav-projects"
-import { NavUser } from "@/components/nav-user"
+/* import { NavUser } from "@/components/nav-user" */
 import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
@@ -19,6 +19,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { ThemeToggle } from "./ui/theme-toggle"
 
 // This is sample data.
 const data = {
@@ -72,7 +73,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        {/* <NavUser user={data.user} /> */}
+        <ThemeToggle />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
