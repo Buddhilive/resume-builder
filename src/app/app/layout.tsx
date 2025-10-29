@@ -4,9 +4,9 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import BreadcrumbCurrentPage from "@/components/breadcrumb-current-page";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
@@ -33,13 +33,13 @@ export default function AppLayout({
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Building Your Application
+                  <BreadcrumbLink href="/">
+                    Resume Builder
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Data Fetching</BreadcrumbPage>
+                  <BreadcrumbCurrentPage />
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
