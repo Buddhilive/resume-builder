@@ -118,12 +118,20 @@ export class PDFExporter {
       originalStyles = conversionResult.originalStyles;
 
       // Create high-quality canvas from the element
+      console.log('Starting html2canvas conversion...');
+      console.log('Element dimensions:', {
+        scrollWidth: element.scrollWidth,
+        scrollHeight: element.scrollHeight,
+        offsetWidth: element.offsetWidth,
+        offsetHeight: element.offsetHeight
+      });
+
       const canvas = await html2canvas(element, {
         scale: config.scale,
         useCORS: true,
         allowTaint: false,
         backgroundColor: '#ffffff',
-        logging: false,
+        logging: true, // Enable logging for debugging
         width: element.scrollWidth,
         height: element.scrollHeight,
         windowWidth: element.scrollWidth,
@@ -134,6 +142,18 @@ export class PDFExporter {
                  element.classList.contains('modal') ||
                  element.classList.contains('overlay');
         },
+        onclone: (clonedDoc, element) => {
+          console.log('html2canvas cloned document successfully');
+          // Apply any additional fixes to the cloned document if needed
+          const clonedElement = clonedDoc.querySelector('[data-puck-root]') || element;
+          console.log('Found cloned element:', clonedElement);
+          return clonedElement;
+        }
+      });
+
+      console.log('html2canvas conversion completed. Canvas dimensions:', {
+        width: canvas.width,
+        height: canvas.height
       });
 
       // Calculate PDF dimensions
@@ -220,6 +240,17 @@ export class PDFExporter {
       console.log('PDF exported successfully:', config.filename);
     } catch (error) {
       console.error('Error exporting PDF:', error);
+      
+      // Try a simpler approach if the main method fails
+      console.log('Attempting fallback PDF export method...');
+      try {
+        await this.fallbackPDFExport(element, config);
+        console.log('Fallback PDF export succeeded');
+        return;
+      } catch (fallbackError) {
+        console.error('Fallback PDF export also failed:', fallbackError);
+      }
+      
       throw new Error('Failed to export PDF. Please try again.');
     } finally {
       // Cleanup: restore original styles and remove injected stylesheets
@@ -232,6 +263,108 @@ export class PDFExporter {
       
       this.showLoadingState(false);
     }
+  }
+
+  /**
+   * Fallback PDF export method with simpler html2canvas options
+   */
+  private static async fallbackPDFExport(element: HTMLElement, config: Required<PDFOptions>): Promise<void> {
+    console.log('Using fallback PDF export method...');
+    
+    // Use simpler html2canvas options
+    const canvas = await html2canvas(element, {
+      scale: 1, // Lower scale for compatibility
+      useCORS: true,
+      allowTaint: true, // Allow tainted canvas
+      backgroundColor: '#ffffff',
+      logging: true,
+      // Let html2canvas determine dimensions automatically
+    });
+
+    console.log('Fallback canvas created with dimensions:', {
+      width: canvas.width,
+      height: canvas.height
+    });
+
+    // Calculate PDF dimensions
+    const { pdfWidth, pdfHeight } = this.calculatePDFDimensions(config.format);
+    
+    // Create PDF instance
+    const pdf = new jsPDF({
+      orientation: config.orientation,
+      unit: 'mm',
+      format: config.format,
+    });
+
+    // Calculate image dimensions to fit the page with margins
+    const availableWidth = pdfWidth - config.margins.left - config.margins.right;
+    const availableHeight = pdfHeight - config.margins.top - config.margins.bottom;
+
+    const imgWidth = availableWidth;
+    const imgHeight = (canvas.height * availableWidth) / canvas.width;
+
+    // Convert canvas to image data
+    const imgData = canvas.toDataURL('image/jpeg', config.quality);
+
+    // Add image to PDF
+    if (imgHeight <= availableHeight) {
+      // Single page
+      pdf.addImage(
+        imgData,
+        'JPEG',
+        config.margins.left,
+        config.margins.top,
+        imgWidth,
+        imgHeight
+      );
+    } else {
+      // Multiple pages - simplified approach
+      const pageCount = Math.ceil(imgHeight / availableHeight);
+      const sourceHeight = canvas.height / pageCount;
+
+      for (let i = 0; i < pageCount; i++) {
+        if (i > 0) pdf.addPage();
+
+        // Create canvas for this page
+        const pageCanvas = document.createElement('canvas');
+        const pageCtx = pageCanvas.getContext('2d');
+        
+        if (pageCtx) {
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sourceHeight;
+
+          pageCtx.drawImage(
+            canvas,
+            0, i * sourceHeight,
+            canvas.width, sourceHeight,
+            0, 0,
+            canvas.width, sourceHeight
+          );
+
+          const pageImgData = pageCanvas.toDataURL('image/jpeg', config.quality);
+          
+          pdf.addImage(
+            pageImgData,
+            'JPEG',
+            config.margins.left,
+            config.margins.top,
+            imgWidth,
+            availableHeight
+          );
+        }
+      }
+    }
+
+    // Add metadata
+    pdf.setProperties({
+      title: 'Resume',
+      subject: 'Professional Resume',
+      author: 'Resume Builder',
+      creator: 'Resume Builder App',
+    });
+
+    // Save the PDF
+    pdf.save(config.filename);
   }
 
   /**

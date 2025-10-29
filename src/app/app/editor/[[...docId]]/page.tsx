@@ -8,14 +8,11 @@ import { PreviewModal } from "@/components/preview-modal";
 import { ATSValidator } from "@/components/ats-validator";
 import { Button } from "@/components/ui/button";
 import { usePDFExport } from "@/hooks/use-pdf-export";
-import PDFExportTestButton from "@/components/pdf-export-test";
-import PDFExportColorTest from "@/components/pdf-export-color-test";
 import { 
   Eye, 
   Save, 
   Download, 
   FileText, 
-  Settings,
   AlertCircle
 } from "lucide-react";
 import { ResumeData } from "@/lib/pdf-utils";
@@ -357,8 +354,14 @@ export default function EditorPage() {
             </div>
           </div>
 
-          {/* Center Section - Actions */}
+          {/* Right Section - Actions */}
           <div className="flex items-center gap-2">
+            {/* Recent changes indicator */}
+            {changeLog.length > 0 && (
+              <div className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">
+                Last: {changeLog[changeLog.length - 1]?.action}
+              </div>
+            )}
             <Button
               onClick={() => setIsPreviewOpen(true)}
               variant="outline"
@@ -386,31 +389,6 @@ export default function EditorPage() {
             >
               <Download className="h-4 w-4" />
               {isExporting ? "Exporting..." : "Export PDF"}
-            </Button>
-          </div>
-
-          {/* Right Section - Settings and Debug Info */}
-          <div className="flex items-center gap-2">
-            {/* Recent changes indicator */}
-            {changeLog.length > 0 && (
-              <div className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">
-                Last: {changeLog[changeLog.length - 1]?.action}
-              </div>
-            )}
-            
-            {/* PDF Export Test Button (for development) */}
-            <PDFExportTestButton />
-            
-            {/* Color Conversion Test (for development) */}
-            <PDFExportColorTest />
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Settings className="h-4 w-4" />
-              Settings
             </Button>
           </div>
         </div>
