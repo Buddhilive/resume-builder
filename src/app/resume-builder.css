@@ -293,6 +293,10 @@
   height: calc(100dvh - 115px) !important;
 }
 
+._PuckHeader-inner_15xnq_10 {
+  padding: 8px !important;
+}
+
 /* Dark Mode Overrides for Puck Editor */
 .dark {
   /* Override Puck's grey color scale for dark mode */
@@ -459,8 +463,8 @@
   background-color: var(--background) !important;
 }
 
-/* Exclude the main canvas/iframe from dark overrides */
-.dark .puck iframe,
+/* Exclude the main canvas/#puck-preview from dark overrides */
+.dark .puck #puck-preview,
 .dark .puck [class*="Render"],
 .dark .puck [class*="render"],
 .dark .puck [class*="Preview"],
@@ -473,7 +477,7 @@
 .dark .puck [class*="editor"] .resume-container,
 .dark .puck [class*="canvas"] .resume-container,
 .dark .puck [class*="frame"] .resume-container,
-.dark .puck iframe .resume-container,
+.dark .puck #puck-preview .resume-container,
 .dark .resume-container {
   background-color: white !important;
   color: black !important;
@@ -622,8 +626,8 @@ body.dark .puck [class*="editor"] *,
 .dark .puck [class*="Canvas"] *,
 .dark .puck [class*="frame"] *,
 .dark .puck [class*="Frame"] *,
-.dark .puck iframe,
-.dark .puck iframe * {
+.dark .puck #puck-preview,
+.dark .puck #puck-preview * {
   background-color: white !important;
   background: white !important;
   color: black !important;
