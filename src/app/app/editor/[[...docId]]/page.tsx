@@ -438,7 +438,7 @@ export default function EditorPage() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-[calc(100vh-48px)] overflow-y-auto flex-col bg-background">
       {/* Loading overlay for document loading */}
       {isLoading && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -589,7 +589,7 @@ export default function EditorPage() {
               </div>
             </div>
           ) : (
-            <div className="relative">
+            <div className="relative pb-4">
               <Puck
                 key={puckKey} // Use stable key for proper re-rendering
                 config={puckConfig as Config}

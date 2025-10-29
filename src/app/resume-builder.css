@@ -289,6 +289,10 @@
   background: #94a3b8;
 }
 
+._PuckLayout-inner_1yxlw_38 {
+  height: calc(100dvh - 115px) !important;
+}
+
 /* Dark Mode Overrides for Puck Editor */
 .dark {
   /* Override Puck's grey color scale for dark mode */
