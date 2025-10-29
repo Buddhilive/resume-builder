@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { Puck, Config } from "@measured/puck";
 import "@measured/puck/puck.css";
 import { puckConfig } from "@/lib/puck-config";
 import { PreviewModal } from "@/components/preview-modal";
 import { ATSValidator } from "@/components/ats-validator";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { usePDFExport } from "@/hooks/use-pdf-export";
 import { 
@@ -13,11 +15,68 @@ import {
   Save, 
   Download, 
   FileText, 
-  AlertCircle
+  AlertCircle,
+  Trash2,
+  Loader2
 } from "lucide-react";
 import { ResumeData } from "@/lib/pdf-utils";
+import { 
+  saveResumeDocument, 
+  loadResumeDocument, 
+  deleteResumeDocument,
+  ResumeDocument 
+} from "@/lib/db";
+import { toast } from "sonner";
 
 export default function EditorPage() {
+  const params = useParams();
+  const router = useRouter();
+  
+  // Get document ID from URL parameters
+  const documentId = params?.docId?.[0] || null;
+  const isNewDocument = !documentId;
+
+  const [currentDocument, setCurrentDocument] = useState<ResumeDocument | null>(null);
+  const [documentName, setDocumentName] = useState("Untitled Resume");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // Effect to load document when component mounts or documentId changes
+  useEffect(() => {
+    const loadDocument = async () => {
+      if (!documentId) {
+        // New document - use default data
+        setCurrentDocument(null);
+        setDocumentName("Untitled Resume");
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const document = await loadResumeDocument(documentId);
+        if (document) {
+          setCurrentDocument(document);
+          setDocumentName(document.name);
+          setData(document.data);
+          setLastSaved(document.modifiedAt);
+          toast.success(`Resume "${document.name}" loaded successfully`);
+        } else {
+          toast.error("Resume not found");
+          // Redirect to new document if not found
+          router.push('/app/editor');
+        }
+      } catch (error) {
+        console.error('Failed to load document:', error);
+        toast.error("Failed to load resume");
+        router.push('/app/editor');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDocument();
+  }, [documentId, router]);
+
   const [data, setData] = useState<ResumeData>({
     content: [
       {
@@ -176,8 +235,12 @@ export default function EditorPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Simulate save operation with actual data persistence logic
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Use current document ID if editing existing document
+      const savedDocumentId = await saveResumeDocument(
+        currentDocument?.id || null, 
+        documentName, 
+        data
+      );
       
       // Update last saved time
       setLastSaved(new Date());
@@ -185,20 +248,75 @@ export default function EditorPage() {
       // Log the save action
       logChange("save", undefined, undefined);
       
+      // If it's a new document, update the URL and current document state
+      if (!currentDocument) {
+        const newDocument: ResumeDocument = {
+          id: savedDocumentId,
+          name: documentName,
+          data: data,
+          createdAt: new Date(),
+          modifiedAt: new Date(),
+        };
+        setCurrentDocument(newDocument);
+        
+        // Update URL to include the document ID
+        router.push(`/app/editor/${savedDocumentId}`);
+        toast.success(`Resume "${documentName}" created successfully`);
+      } else {
+        // Update existing document
+        setCurrentDocument({
+          ...currentDocument,
+          name: documentName,
+          data: data,
+          modifiedAt: new Date(),
+        });
+        toast.success(`Resume "${documentName}" saved successfully`);
+      }
+      
       console.log("Resume saved successfully:", {
         componentCount: data.content.length,
         timestamp: new Date().toISOString(),
-        data
+        documentId: savedDocumentId
       });
-      
-      // Here you would typically make an API call to save the data
-      // await saveResumeData(data);
       
     } catch (error) {
       console.error("Failed to save resume:", error);
-      // Handle save error (show toast notification, etc.)
+      toast.error("Failed to save resume. Please try again.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!currentDocument) {
+      toast.error("No document to delete");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteResumeDocument(currentDocument.id);
+      
+      // Log the delete action
+      logChange("delete", undefined, currentDocument.id);
+      
+      toast.success(`Resume "${currentDocument.name}" deleted successfully`);
+      
+      // Redirect to new document
+      router.push('/app/editor');
+      
+      console.log("Resume deleted successfully:", {
+        documentId: currentDocument.id,
+        documentName: currentDocument.name,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error("Failed to delete resume:", error);
+      toast.error("Failed to delete resume. Please try again.");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -339,6 +457,16 @@ export default function EditorPage() {
 
   return (
     <div className="flex h-screen flex-col bg-gray-50">
+      {/* Loading overlay for document loading */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 flex items-center gap-3">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span>Loading resume...</span>
+          </div>
+        </div>
+      )}
+
       {/* Top Toolbar */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -346,10 +474,31 @@ export default function EditorPage() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-gray-600" />
-              <span className="font-semibold text-gray-900">My Resume</span>
+              <input
+                type="text"
+                value={documentName}
+                onChange={(e) => setDocumentName(e.target.value)}
+                className="font-semibold text-gray-900 bg-transparent border-none outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white px-2 py-1 rounded"
+                onBlur={handleSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.currentTarget.blur();
+                  }
+                }}
+              />
               <span className="text-sm text-gray-500">
                 • Last saved {Math.floor((Date.now() - lastSaved.getTime()) / 60000) || 0} mins ago
                 • {data.content.length} sections
+                {currentDocument && (
+                  <>
+                    • Created {currentDocument.createdAt.toLocaleDateString()}
+                    {!isNewDocument && (
+                      <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                        Saved
+                      </span>
+                    )}
+                  </>
+                )}
               </span>
             </div>
           </div>
@@ -362,6 +511,21 @@ export default function EditorPage() {
                 Last: {changeLog[changeLog.length - 1]?.action}
               </div>
             )}
+            
+            {/* Delete button - only show for existing documents */}
+            {currentDocument && (
+              <Button
+                onClick={() => setShowDeleteConfirm(true)}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                disabled={isDeleting}
+              >
+                <Trash2 className="h-4 w-4" />
+                {isDeleting ? "Deleting..." : "Delete"}
+              </Button>
+            )}
+            
             <Button
               onClick={() => setIsPreviewOpen(true)}
               variant="outline"
@@ -373,7 +537,7 @@ export default function EditorPage() {
             </Button>
             <Button
               onClick={handleSave}
-              disabled={isSaving}
+              disabled={isSaving || isLoading}
               variant="outline"
               size="sm"
               className="flex items-center gap-2"
@@ -383,7 +547,7 @@ export default function EditorPage() {
             </Button>
             <Button
               onClick={handleExport}
-              disabled={isExporting}
+              disabled={isExporting || isLoading}
               size="sm"
               className="flex items-center gap-2"
             >
@@ -445,6 +609,19 @@ export default function EditorPage() {
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
         data={data}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Delete Resume"
+        description={`Are you sure you want to delete "${documentName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+        isLoading={isDeleting}
       />
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -26,278 +27,276 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Edit, Trash2, Plus } from "lucide-react";
-
-// Mock data for demonstration
-const mockResumes = [
-  {
-    id: 1,
-    name: "Software Engineer Resume",
-    created: "2024-01-15",
-    modified: "2024-01-20",
-  },
-  {
-    id: 2,
-    name: "Marketing Manager Resume",
-    created: "2024-01-10",
-    modified: "2024-01-18",
-  },
-  {
-    id: 3,
-    name: "Product Designer Resume",
-    created: "2024-01-08",
-    modified: "2024-01-16",
-  },
-  {
-    id: 4,
-    name: "Data Analyst Resume",
-    created: "2024-01-05",
-    modified: "2024-01-14",
-  },
-  {
-    id: 5,
-    name: "Frontend Developer Resume",
-    created: "2024-01-03",
-    modified: "2024-01-12",
-  },
-  {
-    id: 6,
-    name: "Backend Engineer Resume",
-    created: "2024-01-01",
-    modified: "2024-01-10",
-  },
-  {
-    id: 7,
-    name: "Full Stack Developer Resume",
-    created: "2023-12-28",
-    modified: "2024-01-08",
-  },
-  {
-    id: 8,
-    name: "DevOps Engineer Resume",
-    created: "2023-12-25",
-    modified: "2024-01-06",
-  },
-  {
-    id: 9,
-    name: "UI/UX Designer Resume",
-    created: "2023-12-22",
-    modified: "2024-01-04",
-  },
-  {
-    id: 10,
-    name: "Project Manager Resume",
-    created: "2023-12-20",
-    modified: "2024-01-02",
-  },
-  {
-    id: 11,
-    name: "Business Analyst Resume",
-    created: "2023-12-18",
-    modified: "2023-12-30",
-  },
-  {
-    id: 12,
-    name: "Quality Assurance Resume",
-    created: "2023-12-15",
-    modified: "2023-12-28",
-  },
-];
+import { Edit, Trash2, Plus, FileText, Loader2 } from "lucide-react";
+import { getAllResumeDocuments, deleteResumeDocument, ResumeDocument } from "@/lib/db";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
+  const [resumes, setResumes] = useState<ResumeDocument[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [sortBy, setSortBy] = useState("modified");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    document: ResumeDocument | null;
+  }>({ isOpen: false, document: null });
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Calculate pagination
-  const totalItems = mockResumes.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const itemsPerPage = 10;
+
+  // Load resumes on component mount
+  useEffect(() => {
+    loadResumes();
+  }, []);
+
+  const loadResumes = async () => {
+    setIsLoading(true);
+    try {
+      const documents = await getAllResumeDocuments();
+      setResumes(documents);
+    } catch (error) {
+      console.error('Failed to load resumes:', error);
+      toast.error('Failed to load resumes');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (document: ResumeDocument) => {
+    setDeleteConfirm({ isOpen: true, document });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm.document) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteResumeDocument(deleteConfirm.document.id);
+      toast.success(`Resume "${deleteConfirm.document.name}" deleted successfully`);
+      
+      // Reload resumes
+      await loadResumes();
+    } catch (error) {
+      console.error('Failed to delete resume:', error);
+      toast.error('Failed to delete resume');
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirm({ isOpen: false, document: null });
+    }
+  };
+
+  // Sort resumes based on selected criteria
+  const sortedResumes = [...resumes].sort((a, b) => {
+    switch (sortBy) {
+      case "name":
+        return a.name.localeCompare(b.name);
+      case "created":
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case "modified":
+      default:
+        return new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime();
+    }
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(sortedResumes.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentResumes = mockResumes.slice(startIndex, endIndex);
+  const paginatedResumes = sortedResumes.slice(startIndex, startIndex + itemsPerPage);
 
-  const handleEdit = (id: number) => {
-    console.log("Edit resume:", id);
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
   };
 
-  const handleDelete = (id: number) => {
-    console.log("Delete resume:", id);
-  };
-
-  const handleNewResume = () => {
-    console.log("Create new resume");
-  };
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handleItemsPerPageChange = (value: string) => {
-    setItemsPerPage(parseInt(value));
-    setCurrentPage(1); // Reset to first page
-  };
-
-  // Generate pagination items
-  const generatePaginationItems = () => {
-    const items = [];
-    const maxVisiblePages = 5;
-    const halfVisible = Math.floor(maxVisiblePages / 2);
-
-    let startPage = Math.max(1, currentPage - halfVisible);
-    let endPage = Math.min(totalPages, currentPage + halfVisible);
-
-    // Adjust range if we're near the beginning or end
-    if (currentPage <= halfVisible) {
-      endPage = Math.min(totalPages, maxVisiblePages);
-    }
-    if (currentPage + halfVisible >= totalPages) {
-      startPage = Math.max(1, totalPages - maxVisiblePages + 1);
-    }
-
-    // Add ellipsis at the beginning if needed
-    if (startPage > 1) {
-      items.push(
-        <PaginationItem key="start">
-          <PaginationLink onClick={() => handlePageChange(1)}>1</PaginationLink>
-        </PaginationItem>
-      );
-      if (startPage > 2) {
-        items.push(
-          <PaginationItem key="ellipsis-start">
-            <PaginationEllipsis />
-          </PaginationItem>
-        );
-      }
-    }
-
-    // Add visible page numbers
-    for (let i = startPage; i <= endPage; i++) {
-      items.push(
-        <PaginationItem key={i}>
-          <PaginationLink
-            isActive={i === currentPage}
-            onClick={() => handlePageChange(i)}
-          >
-            {i}
-          </PaginationLink>
-        </PaginationItem>
-      );
-    }
-
-    // Add ellipsis at the end if needed
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) {
-        items.push(
-          <PaginationItem key="ellipsis-end">
-            <PaginationEllipsis />
-          </PaginationItem>
-        );
-      }
-      items.push(
-        <PaginationItem key="end">
-          <PaginationLink onClick={() => handlePageChange(totalPages)}>
-            {totalPages}
-          </PaginationLink>
-        </PaginationItem>
-      );
-    }
-
-    return items;
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span className="text-lg">Loading resumes...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Resumes</h1>
-        <Button onClick={handleNewResume} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          New Resume
-        </Button>
-      </div>
-
-      {/* Table Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Show</span>
-          <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
-            <SelectTrigger className="w-20">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="30">30</SelectItem>
-            </SelectContent>
-          </Select>
-          <span className="text-sm text-muted-foreground">entries</span>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Resumes</h1>
+            <p className="text-gray-600">Manage and edit your resume documents</p>
+          </div>
+          <Link href="/app/editor">
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              New Resume
+            </Button>
+          </Link>
         </div>
-        <div className="text-sm text-muted-foreground">
-          Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} entries
-        </div>
-      </div>
 
-      {/* Table */}
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead>Modified</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {currentResumes.map((resume) => (
-              <TableRow key={resume.id}>
-                <TableCell className="font-medium">{resume.name}</TableCell>
-                <TableCell>{new Date(resume.created).toLocaleDateString()}</TableCell>
-                <TableCell>{new Date(resume.modified).toLocaleDateString()}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon-sm"
-                      onClick={() => handleEdit(resume.id)}
-                      className="h-8 w-8"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon-sm"
-                      onClick={() => handleDelete(resume.id)}
-                      className="h-8 w-8 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+        {/* Empty state */}
+        {resumes.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+            <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No resumes yet</h3>
+            <p className="text-gray-600 mb-6">Create your first resume to get started</p>
+            <Link href="/app/editor">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create New Resume
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <>
+            {/* Controls */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-medium text-gray-700">Sort by:</span>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="modified">Last Modified</SelectItem>
+                      <SelectItem value="created">Date Created</SelectItem>
+                      <SelectItem value="name">Name</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {resumes.length} resume{resumes.length !== 1 ? 's' : ''}
+                </div>
+              </div>
+            </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-center">
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-              />
-            </PaginationItem>
-            {generatePaginationItems()}
-            <PaginationItem>
-              <PaginationNext
-                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+            {/* Table */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead>Last Modified</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedResumes.map((resume) => (
+                    <TableRow key={resume.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-5 w-5 text-blue-600" />
+                          <Link 
+                            href={`/app/editor/${resume.id}`}
+                            className="font-medium text-gray-900 hover:text-blue-600"
+                          >
+                            {resume.name}
+                          </Link>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-gray-600">
+                        {formatDate(resume.createdAt)}
+                      </TableCell>
+                      <TableCell className="text-gray-600">
+                        {formatDate(resume.modifiedAt)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Link href={`/app/editor/${resume.id}`}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center gap-1"
+                            >
+                              <Edit className="h-3 w-3" />
+                              Edit
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(resume)}
+                            className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-6 flex justify-center">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                    
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const page = i + 1;
+                      return (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(page)}
+                            isActive={page === currentPage}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    })}
+                    
+                    {totalPages > 5 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={deleteConfirm.isOpen}
+          onClose={() => setDeleteConfirm({ isOpen: false, document: null })}
+          onConfirm={confirmDelete}
+          title="Delete Resume"
+          description={`Are you sure you want to delete "${deleteConfirm.document?.name}"? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="destructive"
+          isLoading={isDeleting}
+        />
       </div>
     </div>
   );
