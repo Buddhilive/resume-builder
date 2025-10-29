@@ -7,16 +7,20 @@ import { puckConfig } from "@/lib/puck-config";
 import { PreviewModal } from "@/components/preview-modal";
 import { ATSValidator } from "@/components/ats-validator";
 import { Button } from "@/components/ui/button";
+import { usePDFExport } from "@/hooks/use-pdf-export";
+import PDFExportTestButton from "@/components/pdf-export-test";
 import { 
   Eye, 
   Save, 
   Download, 
   FileText, 
-  Settings
+  Settings,
+  AlertCircle
 } from "lucide-react";
+import { ResumeData } from "@/lib/pdf-utils";
 
 export default function EditorPage() {
-  const [data, setData] = useState({
+  const [data, setData] = useState<ResumeData>({
     content: [
       {
         type: "ResumeHeader",
@@ -135,6 +139,9 @@ export default function EditorPage() {
   const [atsScore, setAtsScore] = useState(85);
   const [lastSaved, setLastSaved] = useState(new Date());
 
+  // PDF Export functionality
+  const { isExporting, exportError, exportFromData, clearError } = usePDFExport();
+
   // Track changes for better debugging and analytics
   const [changeLog, setChangeLog] = useState<Array<{
     timestamp: number;
@@ -197,11 +204,30 @@ export default function EditorPage() {
     }
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
+    // Clear any previous errors
+    clearError();
+    
     // Export functionality with updated data
     logChange("export", undefined, undefined);
     console.log("Exporting resume with", data.content.length, "components");
-    // Here you would implement actual PDF export logic
+    
+    try {
+      // Generate a filename with timestamp
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const filename = `resume-${timestamp}.pdf`;
+      
+      await exportFromData(data, { 
+        filename,
+        format: 'a4',
+        orientation: 'portrait'
+      });
+      
+      console.log('PDF export completed successfully');
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      // Error is handled by the hook
+    }
   };
 
   // Enhanced onChange handler to track component changes and deletions
@@ -229,15 +255,16 @@ export default function EditorPage() {
       );
       
       deletedComponents.forEach(component => {
+        const componentId = typeof component.props?.id === 'string' ? component.props.id : undefined;
         const changeInfo = {
           type: "component",
           action: "delete",
           component: component.type,
-          id: component.props?.id
+          id: componentId
         };
         changeSummary.changes.push(changeInfo);
-        logChange("delete", component.type, component.props?.id);
-        console.log(`🗑️ Component deleted: ${component.type} (${component.props?.id})`);
+        logChange("delete", component.type, componentId);
+        console.log(`🗑️ Component deleted: ${component.type} (${componentId})`);
       });
     }
     
@@ -248,15 +275,16 @@ export default function EditorPage() {
       );
       
       addedComponents.forEach(component => {
+        const componentId = typeof component.props?.id === 'string' ? component.props.id : undefined;
         const changeInfo = {
           type: "component",
           action: "add",
           component: component.type,
-          id: component.props?.id
+          id: componentId
         };
         changeSummary.changes.push(changeInfo);
-        logChange("add", component.type, component.props?.id);
-        console.log(`➕ Component added: ${component.type} (${component.props?.id})`);
+        logChange("add", component.type, componentId);
+        console.log(`➕ Component added: ${component.type} (${componentId})`);
       });
     }
     
@@ -271,15 +299,16 @@ export default function EditorPage() {
         const hasPropsChanged = JSON.stringify(correspondingPrevItem.props) !== JSON.stringify(newItem.props);
         
         if (hasPropsChanged) {
+          const componentId = typeof newItem.props?.id === 'string' ? newItem.props.id : undefined;
           const changeInfo = {
             type: "component",
             action: "modify",
             component: newItem.type,
-            id: newItem.props?.id
+            id: componentId
           };
           changeSummary.changes.push(changeInfo);
-          logChange("modify", newItem.type, newItem.props?.id);
-          console.log(`✏️ Component modified: ${newItem.type} (${newItem.props?.id})`);
+          logChange("modify", newItem.type, componentId);
+          console.log(`✏️ Component modified: ${newItem.type} (${componentId})`);
           
           // Log specific field changes for better debugging
           const prevProps = correspondingPrevItem.props as Record<string, unknown> || {};
@@ -350,11 +379,12 @@ export default function EditorPage() {
             </Button>
             <Button
               onClick={handleExport}
+              disabled={isExporting}
               size="sm"
               className="flex items-center gap-2"
             >
               <Download className="h-4 w-4" />
-              Export PDF
+              {isExporting ? "Exporting..." : "Export PDF"}
             </Button>
           </div>
 
@@ -366,6 +396,10 @@ export default function EditorPage() {
                 Last: {changeLog[changeLog.length - 1]?.action}
               </div>
             )}
+            
+            {/* PDF Export Test Button (for development) */}
+            <PDFExportTestButton />
+            
             <Button
               variant="ghost"
               size="sm"
@@ -384,6 +418,22 @@ export default function EditorPage() {
             onScoreChange={setAtsScore}
           />
         </div>
+
+        {/* PDF Export Error Display */}
+        {exportError && (
+          <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-red-500" />
+            <span className="text-sm text-red-700">{exportError}</span>
+            <Button
+              onClick={clearError}
+              variant="ghost"
+              size="sm"
+              className="ml-auto text-red-500 hover:text-red-700"
+            >
+              ✕
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Editor Area */}

@@ -1,9 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, Printer } from "lucide-react";
+import { usePDFExport } from "@/hooks/use-pdf-export";
+import { ResumeData as PDFResumeData } from "@/lib/pdf-utils";
 import {
   ResumeHeader,
   ResumeSummary,
@@ -31,6 +33,9 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
   onClose,
   data,
 }) => {
+  const previewRef = useRef<HTMLDivElement>(null);
+  const { isExporting, exportFromData } = usePDFExport();
+
   const renderComponent = (component: { type: string; props: Record<string, unknown> }, index: number) => {
     switch (component.type) {
       case "ResumeHeader":
@@ -52,6 +57,26 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handlePDFExport = async () => {
+    try {
+      const pdfData: PDFResumeData = { 
+        content: data.content,
+        root: {}
+      };
+      
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const filename = `resume-preview-${timestamp}.pdf`;
+      
+      await exportFromData(pdfData, { 
+        filename,
+        format: 'a4',
+        orientation: 'portrait'
+      });
+    } catch (error) {
+      console.error('PDF export failed:', error);
+    }
   };
 
   const handleDownload = () => {
@@ -118,8 +143,18 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
                 size="sm"
                 className="flex items-center gap-2"
               >
+                <Printer className="h-4 w-4" />
+                Print
+              </Button>
+              <Button
+                onClick={handlePDFExport}
+                disabled={isExporting}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
                 <Download className="h-4 w-4" />
-                Print/Save PDF
+                {isExporting ? "Exporting..." : "Export PDF"}
               </Button>
               <Button
                 onClick={handleDownload}
@@ -128,14 +163,17 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
                 className="flex items-center gap-2"
               >
                 <Download className="h-4 w-4" />
-                Download
+                Download HTML
               </Button>
             </div>
           </div>
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto bg-gray-50 p-6">
-          <div className="mx-auto max-w-[8.5in] bg-white p-8 shadow-lg resume-preview-content">
+          <div 
+            ref={previewRef}
+            className="mx-auto max-w-[8.5in] bg-white p-8 shadow-lg resume-preview-content"
+          >
             {data?.content?.map(renderComponent)}
           </div>
         </div>
