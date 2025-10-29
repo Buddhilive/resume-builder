@@ -322,6 +322,11 @@
   color: var(--foreground) !important;
 }
 
+.dark #puck-preview {
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
 /* Target Puck's internal CSS module classes with higher specificity */
 .dark [class*="Puck_puck"],
 .dark [class*="SidebarSection_SidebarSection"],
@@ -443,28 +448,18 @@
   --puck-color-black: var(--foreground) !important;
 }
 
-/* Maximum specificity override for ALL Puck elements */
-.dark .puck,
-.dark .puck *,
-.dark .puck *:before,
-.dark .puck *:after {
+/* Maximum specificity override for ALL Puck elements (excluding canvas) */
+.dark .puck:not([data-puck-canvas]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]),
+.dark .puck *:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck *:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]):before,
+.dark .puck *:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]):after {
   background-color: var(--card) !important;
   color: var(--foreground) !important;
   border-color: var(--border) !important;
 }
 
-/* Specific override for the main editor canvas to use background */
-.dark .puck [class*="editor"] *,
-.dark .puck [class*="canvas"] *,
-.dark .puck [class*="frame"] *,
-.dark .puck [class*="Editor"] *,
-.dark .puck [class*="Canvas"] *,
-.dark .puck [class*="Frame"] * {
-  background-color: var(--background) !important;
-}
-
-/* Exclude the main canvas/#puck-preview from dark overrides */
-.dark .puck #puck-preview,
+/* Exclude the main canvas/iframe from dark overrides */
+.dark .puck iframe,
 .dark .puck [class*="Render"],
 .dark .puck [class*="render"],
 .dark .puck [class*="Preview"],
@@ -477,7 +472,7 @@
 .dark .puck [class*="editor"] .resume-container,
 .dark .puck [class*="canvas"] .resume-container,
 .dark .puck [class*="frame"] .resume-container,
-.dark .puck #puck-preview .resume-container,
+.dark .puck iframe .resume-container,
 .dark .resume-container {
   background-color: white !important;
   color: black !important;
@@ -500,34 +495,17 @@
   color: var(--foreground) !important;
 }
 
-/* Nuclear option: Override ALL background and color styles */
-.dark .puck div,
-.dark .puck span,
-.dark .puck section,
-.dark .puck article,
-.dark .puck aside,
-.dark .puck nav,
-.dark .puck header,
-.dark .puck main {
+/* Nuclear option: Override ALL background and color styles (excluding canvas) */
+.dark .puck div:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck span:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck section:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck article:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck aside:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck nav:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck header:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck main:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]) {
   background-color: var(--card) !important;
   color: var(--foreground) !important;
-}
-
-/* Override the nuclear option for editor content with higher specificity */
-.dark .puck [class*="editor"] div,
-.dark .puck [class*="editor"] span,
-.dark .puck [class*="editor"] section,
-.dark .puck [class*="editor"] article,
-.dark .puck [class*="canvas"] div,
-.dark .puck [class*="canvas"] span,
-.dark .puck [class*="canvas"] section,
-.dark .puck [class*="canvas"] article,
-.dark .puck [class*="frame"] div,
-.dark .puck [class*="frame"] span,
-.dark .puck [class*="frame"] section,
-.dark .puck [class*="frame"] article {
-  background-color: white !important;
-  color: black !important;
 }
 
 /* Target any remaining white/light elements */
@@ -537,23 +515,14 @@
   background-color: var(--card) !important;
 }
 
-/* Ultimate fallback using attribute selectors and highest specificity */
-html.dark .puck[data-testid] *,
-html.dark .puck[class] *,
-html.dark .puck[id] *,
-body.dark .puck *,
-.dark .puck * {
+/* Ultimate fallback using attribute selectors and highest specificity (excluding canvas) */
+html.dark .puck[data-testid] *:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+html.dark .puck[class] *:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+html.dark .puck[id] *:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+body.dark .puck *:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]) {
   background-color: var(--card) !important;
   color: var(--foreground) !important;
   border-color: var(--border) !important;
-}
-
-/* Override for editor content area with same high specificity */
-html.dark .puck[data-testid] [class*="editor"] *,
-html.dark .puck[class] [class*="editor"] *,
-body.dark .puck [class*="editor"] *,
-.dark .puck [class*="editor"] * {
-  background-color: var(--background) !important;
 }
 
 /* Force override any inline styles */
@@ -582,26 +551,27 @@ body.dark .puck [class*="editor"] *,
 }
 
 /* Final nuclear option - override EVERYTHING with maximum CSS specificity */
-.dark .puck,
-.dark .puck > *,
-.dark .puck > * > *,
-.dark .puck > * > * > *,
-.dark .puck > * > * > * > *,
-.dark .puck div,
-.dark .puck section,
-.dark .puck aside,
-.dark .puck nav,
-.dark .puck header,
-.dark .puck main,
-.dark .puck article,
-.dark .puck span,
-.dark .puck p,
-.dark .puck h1,
-.dark .puck h2,
-.dark .puck h3,
-.dark .puck h4,
-.dark .puck h5,
-.dark .puck h6 {
+/* Exclude canvas area from nuclear overrides */
+.dark .puck:not([data-puck-canvas]),
+.dark .puck > *:not([data-puck-canvas]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]),
+.dark .puck > * > *:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]),
+.dark .puck > * > * > *:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]),
+.dark .puck > * > * > * > *:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]),
+.dark .puck div:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck section:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck aside:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck nav:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck header:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck main:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck article:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck span:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck p:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck h1:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck h2:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck h3:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck h4:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck h5:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]),
+.dark .puck h6:not([data-puck-canvas]):not([data-puck-component-type]):not([class*="_PuckEditor_"]):not([class*="PuckEditor"]):not(.resume-container):not([class*="resume"]) {
   background-color: var(--card) !important;
   background: var(--card) !important;
   color: var(--foreground) !important;
@@ -609,34 +579,113 @@ body.dark .puck [class*="editor"] *,
 }
 
 /* Override for main editor container to have proper background */
-.dark .puck [class*="editor"],
-.dark .puck [class*="Editor"],
-.dark .puck [class*="canvas"], 
-.dark .puck [class*="Canvas"],
-.dark .puck [class*="frame"],
-.dark .puck [class*="Frame"] {
+.dark .puck [class*="editor"]:not([data-puck-component-type]):not(.resume-container):not([class*="resume"]),
+.dark .puck [class*="Editor"]:not([data-puck-component-type]):not(.resume-container):not([class*="resume"]),
+.dark .puck [class*="canvas"]:not([data-puck-component-type]):not(.resume-container):not([class*="resume"]), 
+.dark .puck [class*="Canvas"]:not([data-puck-component-type]):not(.resume-container):not([class*="resume"]),
+.dark .puck [class*="frame"]:not([data-puck-component-type]):not(.resume-container):not([class*="resume"]),
+.dark .puck [class*="Frame"]:not([data-puck-component-type]):not(.resume-container):not([class*="resume"]) {
   background-color: var(--background) !important;
   background: var(--background) !important;
 }
 
 /* Critical fix: Force resume content to be white with black text */
-.dark .puck [class*="editor"] *,
-.dark .puck [class*="Editor"] *,
-.dark .puck [class*="canvas"] *,
-.dark .puck [class*="Canvas"] *,
-.dark .puck [class*="frame"] *,
-.dark .puck [class*="Frame"] *,
-.dark .puck #puck-preview,
-.dark .puck #puck-preview * {
+/* Target the main canvas area specifically without iframe */
+.dark .puck [class*="_PuckEditor_"],
+.dark .puck [class*="_PuckFrame_"],
+.dark .puck [class*="PuckEditor"],
+.dark .puck [class*="PuckFrame"],
+.dark .puck [data-puck-canvas],
+.dark .puck [data-puck-canvas] *,
+.dark .puck [data-puck-component-type],
+.dark .puck [data-puck-component-type] *,
+.dark .puck iframe,
+.dark .puck iframe * {
   background-color: white !important;
   background: white !important;
+  color: black !important;
+}
+
+/* Target Puck layout grid center column (editor area) */
+.dark .puck > div[class*="_PuckLayout_"] > div:nth-child(2),
+.dark .puck > div[class*="_PuckLayout_"] > div:nth-child(2) *,
+.dark .puck > div[class*="PuckLayout"] > div:nth-child(2),
+.dark .puck > div[class*="PuckLayout"] > div:nth-child(2) *,
+.dark .puck > div > div[style*="grid-area: editor"],
+.dark .puck > div > div[style*="grid-area: editor"] *,
+.dark .puck > div > div[style*="grid-area:editor"],
+.dark .puck > div > div[style*="grid-area:editor"] * {
+  background-color: var(--background) !important;
+  color: black !important;
+}
+
+/* Enhanced targeting for the main editing area */
+.dark .puck div[style*="margin: 0 auto"],
+.dark .puck div[style*="margin:0 auto"],
+.dark .puck div[style*="margin: auto"],
+.dark .puck div[style*="margin:auto"] {
+  background-color: white !important;
+  color: black !important;
+}
+
+.dark .puck div[style*="margin: 0 auto"] *,
+.dark .puck div[style*="margin:0 auto"] *,
+.dark .puck div[style*="margin: auto"] *,
+.dark .puck div[style*="margin:auto"] * {
+  background-color: white !important;
+  color: black !important;
+}
+
+/* Target the layout center column specifically */
+.dark .puck > div > div:nth-child(2),
+.dark .puck > div > div:nth-child(2) * {
+  background-color: white !important;
   color: black !important;
 }
 
 /* Ensure resume components maintain their styling */
 .dark .resume-container,
 .dark .resume-container *,
-.dark [data-puck-component-type] {
+.dark [data-puck-component-type],
+.dark [data-puck-component-type] * {
+  background-color: white !important;
+  color: black !important;
+}
+
+/* Override any generic Puck styling for resume content */
+.dark .puck .resume-section,
+.dark .puck .resume-section *,
+.dark .puck .resume-header,
+.dark .puck .resume-header *,
+.dark .puck .resume-entry,
+.dark .puck .resume-entry *,
+.dark .puck .resume-title,
+.dark .puck .resume-title *,
+.dark .puck .resume-entry-title,
+.dark .puck .resume-entry-title *,
+.dark .puck .resume-entry-subtitle,
+.dark .puck .resume-entry-subtitle *,
+.dark .puck .resume-entry-description,
+.dark .puck .resume-entry-description *,
+.dark .puck .resume-skills-grid,
+.dark .puck .resume-skills-grid * {
+  background-color: white !important;
+  color: black !important;
+}
+
+/* Highly specific targeting for the paper/document area */
+.dark .puck div[style*="max-width: 8.5in"],
+.dark .puck div[style*="max-width:8.5in"],
+.dark .puck div[style*="width: 8.5in"],
+.dark .puck div[style*="width:8.5in"] {
+  background-color: white !important;
+  color: black !important;
+}
+
+.dark .puck div[style*="max-width: 8.5in"] *,
+.dark .puck div[style*="max-width:8.5in"] *,
+.dark .puck div[style*="width: 8.5in"] *,
+.dark .puck div[style*="width:8.5in"] * {
   background-color: white !important;
   color: black !important;
 }
