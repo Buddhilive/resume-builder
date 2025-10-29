@@ -41,6 +41,47 @@ export default function EditorPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDataReady, setIsDataReady] = useState(false); // Track when data is ready for Puck
+  const [data, setData] = useState<ResumeData>({
+    content: [],
+    root: {},
+  });
+
+  // Function to validate and normalize resume data
+  const normalizeResumeData = (rawData: ResumeData): ResumeData => {
+    const normalized = {
+      content: Array.isArray(rawData.content) ? rawData.content : [],
+      root: rawData.root && typeof rawData.root === 'object' ? rawData.root : {},
+    };
+    
+    console.log('Data normalized:', {
+      original: rawData,
+      normalized: normalized,
+      contentLength: normalized.content.length
+    });
+    
+    return normalized;
+  };
+
+  // Create a stable key for Puck component
+  const puckKey = React.useMemo(() => {
+    const baseKey = documentId || 'new-document';
+    const dataSignature = data.content.length > 0 ? `_${data.content.length}` : '';
+    return `${baseKey}${dataSignature}_${isDataReady}`;
+  }, [documentId, data.content.length, isDataReady]);
+
+  // Create a memoized version of the Puck data to ensure proper re-rendering
+  const puckData = React.useMemo(() => {
+    const clonedData = JSON.parse(JSON.stringify(data)); // Deep clone to ensure Puck detects changes
+    console.log('Puck data memoized:', {
+      original: data,
+      cloned: clonedData,
+      contentLength: clonedData.content?.length || 0,
+      hasChanged: JSON.stringify(data) !== JSON.stringify(clonedData)
+    });
+    return clonedData;
+  }, [data]);
+
   // Effect to load document when component mounts or documentId changes
   useEffect(() => {
     const loadDocument = async () => {
@@ -48,18 +89,40 @@ export default function EditorPage() {
         // New document - use default data
         setCurrentDocument(null);
         setDocumentName("Untitled Resume");
+        setIsDataReady(true); // Ready immediately for new documents
         return;
       }
 
       setIsLoading(true);
+      setIsDataReady(false);
       try {
         const document = await loadResumeDocument(documentId);
         if (document) {
           setCurrentDocument(document);
           setDocumentName(document.name);
-          setData(document.data);
+          
+          // Add debugging to ensure data is properly structured
+          console.log('Document loaded from DB:', document);
+          console.log('Document data structure:', {
+            hasContent: !!document.data.content,
+            contentLength: document.data.content?.length || 0,
+            hasRoot: !!document.data.root,
+            rootKeys: Object.keys(document.data.root || {}),
+            fullData: document.data
+          });
+          
+          // Normalize the data to ensure Puck compatibility
+          const normalizedData = normalizeResumeData(document.data);
+          setData(normalizedData);
           setLastSaved(document.modifiedAt);
-          toast.success(`Resume "${document.name}" loaded successfully`);
+          
+          // Add a small delay to ensure state is fully updated
+          setTimeout(() => {
+            setIsDataReady(true);
+            toast.success(`Resume "${document.name}" loaded successfully`);
+          }, 100);
+          
+          console.log("Resume loaded and normalized:", { original: document, normalized: normalizedData });
         } else {
           toast.error("Resume not found");
           // Redirect to new document if not found
@@ -76,120 +139,6 @@ export default function EditorPage() {
 
     loadDocument();
   }, [documentId, router]);
-
-  const [data, setData] = useState<ResumeData>({
-    content: [
-      {
-        type: "ResumeHeader",
-        props: {
-          id: "header-1",
-          fullName: "John Doe",
-          email: "john.doe@email.com",
-          phone: "+1 (555) 123-4567",
-          location: "San Francisco, CA",
-          website: "www.johndoe.com",
-          linkedin: "linkedin.com/in/johndoe",
-        },
-      },
-      {
-        type: "ResumeSummary",
-        props: {
-          id: "summary-1",
-          title: "PROFESSIONAL SUMMARY",
-          content:
-            "Results-driven Software Engineer with 5+ years of experience building scalable web applications. Proven expertise in React, TypeScript, and cloud technologies. Strong track record of delivering high-impact solutions and mentoring junior developers.",
-        },
-      },
-      {
-        type: "ResumeExperience",
-        props: {
-          id: "experience-1",
-          title: "WORK EXPERIENCE",
-          experiences: [
-            {
-              jobTitle: "Senior Full Stack Developer",
-              company: "Tech Innovation Labs",
-              location: "San Francisco, CA",
-              startDate: "Jan 2022",
-              endDate: "Present",
-              description:
-                "• Led development and deployment of customer-facing features used by 100K+ users\n• Architected and implemented microservices infrastructure using Node.js and TypeScript\n• Improved application performance by 40% through optimization and caching strategies\n• Mentored team of 3 junior developers and conducted code reviews",
-            },
-            {
-              jobTitle: "Full Stack Developer",
-              company: "Digital Solutions Inc",
-              location: "San Francisco, CA",
-              startDate: "Jun 2020",
-              endDate: "Dec 2021",
-              description:
-                "• Developed responsive web applications using React and Next.js\n• Built RESTful APIs and database schemas using PostgreSQL\n                • Collaborated with cross-functional teams to deliver projects on time",
-            },
-          ],
-        },
-      },
-      {
-        type: "ResumeEducation",
-        props: {
-          id: "education-1",
-          title: "EDUCATION",
-          education: [
-            {
-              degree: "Bachelor of Science in Computer Science",
-              school: "University of California, Berkeley",
-              field: "Computer Science",
-              graduationDate: "May 2020",
-              gpa: "3.8",
-            },
-          ],
-        },
-      },
-      {
-        type: "ResumeSkills",
-        props: {
-          id: "skills-1",
-          title: "SKILLS",
-          skills: [
-            {
-              category: "Programming Languages",
-              items: "JavaScript, TypeScript, Python, SQL, HTML, CSS",
-            },
-            {
-              category: "Frontend Technologies",
-              items: "React, Next.js, Tailwind CSS, Shadcn/ui, Redux",
-            },
-            {
-              category: "Backend & Databases",
-              items: "Node.js, Express, PostgreSQL, MongoDB, Firebase",
-            },
-            {
-              category: "Tools & Platforms",
-              items: "Git, Docker, AWS, GitHub, VS Code, Figma",
-            },
-          ],
-        },
-      },
-      {
-        type: "ResumeCertifications",
-        props: {
-          id: "certifications-1",
-          title: "CERTIFICATIONS",
-          certifications: [
-            {
-              name: "AWS Certified Solutions Architect - Associate",
-              issuer: "Amazon Web Services",
-              date: "2023",
-            },
-            {
-              name: "Google Cloud Professional Data Engineer",
-              issuer: "Google Cloud",
-              date: "2022",
-            },
-          ],
-        },
-      },
-    ],
-    root: {},
-  });
 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -221,6 +170,27 @@ export default function EditorPage() {
 
   console.log("Current ATS Score:", atsScore);
   console.log("Total components:", data.content.length);
+  console.log("Current data state for Puck:", {
+    hasContent: !!data.content,
+    contentLength: data.content?.length || 0,
+    hasRoot: !!data.root,
+    rootKeys: Object.keys(data.root || {}),
+    documentId: documentId,
+    isLoading: isLoading,
+    isDataReady: isDataReady,
+    currentDocument: currentDocument?.id,
+    puckKey: documentId || 'new-document'
+  });
+
+  // Add effect to track data changes
+  React.useEffect(() => {
+    console.log('📊 Data state changed:', {
+      contentLength: data.content.length,
+      timestamp: new Date().toISOString(),
+      isDataReady,
+      hasDocument: !!currentDocument
+    });
+  }, [data, isDataReady, currentDocument]);
 
   // Effect to handle data changes and trigger ATS recalculation
   useEffect(() => {
@@ -455,6 +425,32 @@ export default function EditorPage() {
     });
   };
 
+  // Debug function to manually test data loading (development only)
+  const addTestData = () => {
+    if (process.env.NODE_ENV === 'development') {
+      const testData: ResumeData = {
+        content: [
+          {
+            type: 'ResumeHeader',
+            props: {
+              id: 'header-1',
+              fullName: 'Test User',
+              email: 'test@example.com',
+              phone: '123-456-7890',
+              location: 'Test City, TC',
+              website: 'www.test.com',
+              linkedin: 'linkedin.com/in/test'
+            }
+          }
+        ],
+        root: {}
+      };
+      
+      console.log('🧪 Adding test data:', testData);
+      setData(testData);
+    }
+  };
+
   return (
     <div className="flex h-screen flex-col bg-gray-50">
       {/* Loading overlay for document loading */}
@@ -505,6 +501,18 @@ export default function EditorPage() {
 
           {/* Right Section - Actions */}
           <div className="flex items-center gap-2">
+            {/* Development test button */}
+            {process.env.NODE_ENV === 'development' && data.content.length === 0 && (
+              <Button
+                onClick={addTestData}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 bg-yellow-50 border-yellow-200 text-yellow-800"
+              >
+                🧪 Add Test Data
+              </Button>
+            )}
+            
             {/* Recent changes indicator */}
             {changeLog.length > 0 && (
               <div className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">
@@ -585,22 +593,38 @@ export default function EditorPage() {
       {/* Editor Area */}
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 bg-white">
-          <Puck
-            config={puckConfig as Config}
-            data={data}
-            onPublish={(publishData) => {
-              handlePuckChange(publishData);
-              handleSave(); // Auto-save on publish
-              console.log("Resume published:", publishData);
-            }}
-            ui={{
-              leftSideBarVisible: true,
-              rightSideBarVisible: true,
-            }}
-            onChange={(newData) => {
-              handlePuckChange(newData);
-            }}
-          />
+          {isLoading || !isDataReady ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                <p className="text-gray-600">
+                  {isLoading ? "Loading resume editor..." : "Preparing data..."}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="relative">
+              <Puck
+                key={puckKey} // Use stable key for proper re-rendering
+                config={puckConfig as Config}
+                data={puckData}
+                onPublish={(publishData) => {
+                  console.log("Puck onPublish called with:", publishData);
+                  handlePuckChange(publishData);
+                  handleSave(); // Auto-save on publish
+                  console.log("Resume published:", publishData);
+                }}
+                ui={{
+                  leftSideBarVisible: true,
+                  rightSideBarVisible: true,
+                }}
+                onChange={(newData) => {
+                  console.log("Puck onChange called with:", newData);
+                  handlePuckChange(newData);
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
