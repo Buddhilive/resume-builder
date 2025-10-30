@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export const isBuiltInAIAvailabile = async () => {
-  const isLanguageModelAvailable = await (
-    window as any
-  ).LanguageModel.availability();
+  const isLanguageModelAvailable =
+    await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).LanguageModel.availability();
   if (isLanguageModelAvailable === "available") {
     return true;
   }
@@ -10,21 +11,26 @@ export const isBuiltInAIAvailabile = async () => {
 
 export const isLanguageDetectorAvailable = async () => {
   try {
-    const canDetect = await (window as any).ai?.languageDetector?.capabilities();
-    return canDetect?.available === "readily";
+    const canDetect = await (window as any).LanguageDetector.availability();
+    console.log("Language detector availability result:", canDetect);
+    return canDetect === "available";
   } catch (error) {
     console.error("Language detector availability check failed:", error);
     return false;
   }
 };
 
-export const isTranslatorAvailable = async (sourceLanguage: string, targetLanguage: string) => {
+export const isTranslatorAvailable = async (
+  sourceLanguage: string,
+  targetLanguage: string
+) => {
   try {
-    const canTranslate = await (window as any).ai?.translator?.capabilities({
+    const canTranslate = await (window as any).Translator.availability({
       sourceLanguage,
       targetLanguage,
     });
-    return canTranslate?.available === "readily";
+    console.log("Translator availability result:", canTranslate);
+    return canTranslate === "available" || canTranslate === "downloadable";
   } catch (error) {
     console.error("Translator availability check failed:", error);
     return false;

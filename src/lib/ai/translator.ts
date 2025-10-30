@@ -1,4 +1,8 @@
-import { isLanguageDetectorAvailable, isTranslatorAvailable } from '../provider';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  isLanguageDetectorAvailable,
+  isTranslatorAvailable,
+} from "../provider";
 
 export interface TranslationOptions {
   targetLanguage: string;
@@ -11,9 +15,9 @@ export interface LanguageDetectionResult {
 
 // Language codes supported by Chrome AI
 export const SUPPORTED_LANGUAGES = {
-  en: 'English',
-  es: 'Spanish', 
-  ja: 'Japanese',
+  es: "Spanish",
+  ja: "Japanese",
+  en: "English",
 } as const;
 
 export type SupportedLanguageCode = keyof typeof SUPPORTED_LANGUAGES;
@@ -21,66 +25,74 @@ export type SupportedLanguageCode = keyof typeof SUPPORTED_LANGUAGES;
 // Extract all text content from Puck data structure
 const extractTextFromPuckData = (data: any): string[] => {
   const textContents: string[] = [];
-  
+
   if (data.content && Array.isArray(data.content)) {
     data.content.forEach((item: any) => {
-      if (item.props && typeof item.props === 'object') {
+      if (item.props && typeof item.props === "object") {
         // Recursively extract text from props
         const extractTextFromObject = (obj: any): void => {
           Object.values(obj).forEach((value) => {
-            if (typeof value === 'string' && value.trim().length > 0) {
+            if (typeof value === "string" && value.trim().length > 0) {
               textContents.push(value.trim());
             } else if (Array.isArray(value)) {
               value.forEach((item) => {
-                if (typeof item === 'string' && item.trim().length > 0) {
+                if (typeof item === "string" && item.trim().length > 0) {
                   textContents.push(item.trim());
-                } else if (typeof item === 'object' && item !== null) {
+                } else if (typeof item === "object" && item !== null) {
                   extractTextFromObject(item);
                 }
               });
-            } else if (typeof value === 'object' && value !== null) {
+            } else if (typeof value === "object" && value !== null) {
               extractTextFromObject(value);
             }
           });
         };
-        
+
         extractTextFromObject(item.props);
       }
     });
   }
-  
+
   return textContents;
 };
 
 // Detect language of the resume content
-export const detectResumeLanguage = async (data: any): Promise<LanguageDetectionResult> => {
+export const detectResumeLanguage = async (
+  data: any
+): Promise<LanguageDetectionResult> => {
   const isAvailable = await isLanguageDetectorAvailable();
   if (!isAvailable) {
-    throw new Error('Language detector is not available');
+    throw new Error("Language detector is not available");
   }
 
   try {
-    const detector = await (window as any).ai.languageDetector.create();
+    const detector = await (window as any).LanguageDetector.create({
+      monitor(m: any) {
+        m.addEventListener("downloadprogress", (e: any) => {
+          console.log(`Downloaded ${e.loaded * 100}%`);
+        });
+      },
+    });
     const textContents = extractTextFromPuckData(data);
-    
+
     if (textContents.length === 0) {
-      throw new Error('No text content found in resume');
+      throw new Error("No text content found in resume");
     }
 
     // Combine multiple text samples for better detection
-    const sampleText = textContents.slice(0, 10).join('. ');
+    const sampleText = textContents.slice(0, 10).join(". ");
     const results = await detector.detect(sampleText);
-    
+
     if (results && results.length > 0) {
       return {
         detectedLanguage: results[0].detectedLanguage,
         confidence: results[0].confidence,
       };
     }
-    
-    throw new Error('Could not detect language');
+
+    throw new Error("Could not detect language");
   } catch (error) {
-    console.error('Language detection failed:', error);
+    console.error("Language detection failed:", error);
     throw error;
   }
 };
@@ -90,33 +102,38 @@ const translatePuckDataRecursively = async (
   obj: any,
   translator: any
 ): Promise<any> => {
-  if (typeof obj === 'string' && obj.trim().length > 0) {
+  if (typeof obj === "string" && obj.trim().length > 0) {
     try {
       const translated = await translator.translate(obj);
       return translated || obj;
     } catch (error) {
-      console.warn('Failed to translate text:', obj, error);
+      console.warn("Failed to translate text:", obj, error);
       return obj;
     }
   }
-  
+
   if (Array.isArray(obj)) {
     const translatedArray = [];
     for (const item of obj) {
-      translatedArray.push(await translatePuckDataRecursively(item, translator));
+      translatedArray.push(
+        await translatePuckDataRecursively(item, translator)
+      );
     }
     return translatedArray;
   }
-  
-  if (typeof obj === 'object' && obj !== null) {
+
+  if (typeof obj === "object" && obj !== null) {
     const translatedObj: any = {};
     for (const [key, value] of Object.entries(obj)) {
       // Keep keys unchanged, only translate values
-      translatedObj[key] = await translatePuckDataRecursively(value, translator);
+      translatedObj[key] = await translatePuckDataRecursively(
+        value,
+        translator
+      );
     }
     return translatedObj;
   }
-  
+
   return obj;
 };
 
@@ -127,12 +144,12 @@ export const translateResumeData = async (
   onProgress?: (progress: number) => void
 ): Promise<any> => {
   const { targetLanguage } = options;
-  
+
   // First detect the current language
   let detectionResult: LanguageDetectionResult;
   try {
     detectionResult = await detectResumeLanguage(data);
-    console.log('Detected language:', detectionResult);
+    console.log("Detected language:", detectionResult);
   } catch (error) {
     throw new Error(`Language detection failed: ${error}`);
   }
@@ -140,7 +157,14 @@ export const translateResumeData = async (
   // Check if source and target languages are the same
   if (detectionResult.detectedLanguage === targetLanguage) {
     throw new Error(
-      `Source language (${SUPPORTED_LANGUAGES[detectionResult.detectedLanguage as SupportedLanguageCode] || detectionResult.detectedLanguage}) and target language (${SUPPORTED_LANGUAGES[targetLanguage as SupportedLanguageCode] || targetLanguage}) are the same.`
+      `Source language (${
+        SUPPORTED_LANGUAGES[
+          detectionResult.detectedLanguage as SupportedLanguageCode
+        ] || detectionResult.detectedLanguage
+      }) and target language (${
+        SUPPORTED_LANGUAGES[targetLanguage as SupportedLanguageCode] ||
+        targetLanguage
+      }) are the same.`
     );
   }
 
@@ -149,7 +173,7 @@ export const translateResumeData = async (
     detectionResult.detectedLanguage,
     targetLanguage
   );
-  
+
   if (!isAvailable) {
     throw new Error(
       `Translation from ${detectionResult.detectedLanguage} to ${targetLanguage} is not available`
@@ -158,33 +182,38 @@ export const translateResumeData = async (
 
   try {
     // Create translator instance
-    const translator = await (window as any).ai.translator.create({
+    const translator = await (window as any).Translator.create({
       sourceLanguage: detectionResult.detectedLanguage,
       targetLanguage: targetLanguage,
+      monitor(m: any) {
+        m.addEventListener("downloadprogress", (e: any) => {
+          console.log(`Downloaded ${e.loaded * 100}%`);
+        });
+      },
     });
 
     onProgress?.(10);
 
     // Create a deep copy of the data to avoid modifying the original
     const translatedData = JSON.parse(JSON.stringify(data));
-    
+
     onProgress?.(20);
 
     // Translate only the content array
     if (translatedData.content && Array.isArray(translatedData.content)) {
       const totalItems = translatedData.content.length;
-      
+
       for (let i = 0; i < translatedData.content.length; i++) {
         const item = translatedData.content[i];
-        
-        if (item.props && typeof item.props === 'object') {
+
+        if (item.props && typeof item.props === "object") {
           // Translate only the props, keeping the structure intact
           translatedData.content[i] = {
             ...item,
             props: await translatePuckDataRecursively(item.props, translator),
           };
         }
-        
+
         // Update progress
         const progress = 20 + Math.floor((i / totalItems) * 70);
         onProgress?.(progress);
@@ -200,7 +229,7 @@ export const translateResumeData = async (
       confidence: detectionResult.confidence,
     };
   } catch (error) {
-    console.error('Translation failed:', error);
+    console.error("Translation failed:", error);
     throw error;
   }
 };
@@ -209,9 +238,10 @@ export const translateResumeData = async (
 export const checkTranslationAvailability = async (): Promise<boolean> => {
   try {
     const detectorAvailable = await isLanguageDetectorAvailable();
-    
+    const anyTranslationAvailable = await isTranslatorAvailable("en", "es"); // Example pair
+
     // Check if at least one translation pair is available
-    const translationChecks = [];
+    /* const translationChecks = [];
     const languages = Object.keys(SUPPORTED_LANGUAGES);
     
     for (const source of languages) {
@@ -223,11 +253,11 @@ export const checkTranslationAvailability = async (): Promise<boolean> => {
     }
     
     const translationResults = await Promise.all(translationChecks);
-    const anyTranslationAvailable = translationResults.some(result => result);
-    
+    const anyTranslationAvailable = translationResults.some(result => result); */
+
     return detectorAvailable && anyTranslationAvailable;
   } catch (error) {
-    console.error('Failed to check translation availability:', error);
+    console.error("Failed to check translation availability:", error);
     return false;
   }
 };

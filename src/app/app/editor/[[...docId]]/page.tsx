@@ -57,7 +57,7 @@ export default function EditorPage() {
     content: [],
     root: {},
   });
-  let [isAIEnabled, setIsAIEnabled] = useState(false);
+  const [isAIEnabled, setIsAIEnabled] = useState(false);
   const [isTranslationAvailable, setIsTranslationAvailable] = useState(false);
   const [selectedTargetLanguage, setSelectedTargetLanguage] = useState<SupportedLanguageCode>('en');
   const [isTranslating, setIsTranslating] = useState(false);
@@ -557,20 +557,6 @@ export default function EditorPage() {
                 Last: {changeLog[changeLog.length - 1]?.action}
               </div>
             )} */}
-
-            {isAIEnabled && (
-              <>
-                <Button
-                  onClick={() => setIsPreviewOpen(true)}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                  title="Preview"
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </>
-            )}
 
             {isAIEnabled && isTranslationAvailable && (
               <>
