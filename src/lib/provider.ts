@@ -36,3 +36,35 @@ export const isTranslatorAvailable = async (
     return false;
   }
 };
+
+export const isWriterAvailable = async () => {
+  try {
+    if (!('Writer' in window)) {
+      console.log("Writer API not found in window");
+      return false;
+    }
+    
+    const availability = await (window as any).Writer.availability();
+    console.log("Writer availability result:", availability);
+    return availability === "available" || availability === "downloadable";
+  } catch (error) {
+    console.error("Writer availability check failed:", error);
+    return false;
+  }
+};
+
+export const isSummarizerAvailable = async () => {
+  try {
+    if (!('Summarizer' in window)) {
+      console.log("Summarizer API not found in window");
+      return false;
+    }
+    
+    const availability = await (window as any).Summarizer.availability();
+    console.log("Summarizer availability result:", availability);
+    return availability === "available" || availability === "downloadable";
+  } catch (error) {
+    console.error("Summarizer availability check failed:", error);
+    return false;
+  }
+};

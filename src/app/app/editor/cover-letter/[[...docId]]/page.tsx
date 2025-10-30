@@ -30,7 +30,7 @@ import {
   CoverLetterDocument,
 } from "@/lib/db";
 import { toast } from "sonner";
-import { isBuiltInAIAvailabile } from "@/lib/provider";
+import { isBuiltInAIAvailabile, isWriterAvailable, isSummarizerAvailable } from "@/lib/provider";
 import {
   translateCoverLetterContent,
   checkCoverLetterTranslationAvailability,
@@ -38,6 +38,7 @@ import {
   type SupportedLanguageCode,
 } from "@/lib/ai/cover-letter-translator";
 import { type MDXEditorMethods } from '@mdxeditor/editor';
+import { AIWriterDialog } from "@/components/ai-writer-dialog";
 
 export default function CoverLetterEditorPage() {
   const params = useParams();
@@ -57,10 +58,12 @@ export default function CoverLetterEditorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState(new Date());
   const [isAIEnabled, setIsAIEnabled] = useState(false);
+  const [isWriterEnabled, setIsWriterEnabled] = useState(false);
   const [isTranslationAvailable, setIsTranslationAvailable] = useState(false);
   const [selectedTargetLanguage, setSelectedTargetLanguage] = useState<SupportedLanguageCode>("en");
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationProgress, setTranslationProgress] = useState(0);
+  const [showAIWriterDialog, setShowAIWriterDialog] = useState(false);
 
   // PDF Export functionality
   const { isExporting, exportError, exportFromContent, clearError } = useCoverLetterPDFExport();
@@ -107,6 +110,12 @@ export default function CoverLetterEditorPage() {
     setIsAIEnabled(isAIAvailable);
 
     if (isAIAvailable) {
+      // Check Writer API availability
+      const isWriterReady = await isWriterAvailable();
+      const isSummarizerReady = await isSummarizerAvailable();
+      setIsWriterEnabled(isWriterReady && isSummarizerReady);
+
+      // Check translation availability
       const isTranslationReady = await checkCoverLetterTranslationAvailability();
       setIsTranslationAvailable(isTranslationReady);
     }
@@ -241,8 +250,20 @@ export default function CoverLetterEditorPage() {
   };
 
   const handleWriteWithAI = () => {
-    // Placeholder for AI writing functionality
-    toast.info("AI writing feature coming soon!");
+    if (!isWriterEnabled) {
+      toast.error("AI Writer is not available");
+      return;
+    }
+    setShowAIWriterDialog(true);
+  };
+
+  const handleAIContentGenerated = (generatedContent: string) => {
+    setContent(generatedContent);
+    
+    // Update editor content
+    if (editorRef.current) {
+      editorRef.current.setMarkdown(generatedContent);
+    }
   };
 
   const handleContentChange = (newContent: string) => {
@@ -301,7 +322,7 @@ export default function CoverLetterEditorPage() {
           {/* Right Section - Actions */}
           <div className="flex items-center gap-2">
             {/* AI Write button */}
-            {isAIEnabled && (
+            {isWriterEnabled && (
               <Button
                 onClick={handleWriteWithAI}
                 variant="outline"
@@ -444,6 +465,13 @@ export default function CoverLetterEditorPage() {
         cancelText="Cancel"
         variant="destructive"
         isLoading={isDeleting}
+      />
+
+      {/* AI Writer Dialog */}
+      <AIWriterDialog
+        isOpen={showAIWriterDialog}
+        onClose={() => setShowAIWriterDialog(false)}
+        onContentGenerated={handleAIContentGenerated}
       />
     </div>
   );
