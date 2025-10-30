@@ -61,7 +61,7 @@ export default function InitializedMDXEditor({
       ]}
       {...props}
       ref={editorRef}
-      className="min-h-[500px] prose prose-sm sm:prose lg:prose-lg xl:prose-xl mx-auto focus:outline-none"
+      className="min-h-[300px] prose prose-sm sm:prose lg:prose-lg xl:prose-xl mx-auto focus:outline-none"
     />
   )
 }

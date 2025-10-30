@@ -167,21 +167,6 @@ export function AIWriterDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* AI Requirements Notice */}
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md dark:bg-blue-950/30 dark:border-blue-800">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 dark:text-blue-400" />
-              <div className="text-sm">
-                <p className="font-medium text-blue-800 dark:text-blue-300">
-                  Chrome Built-in AI Required
-                </p>
-                <p className="text-blue-700 dark:text-blue-400 mt-1">
-                  This feature uses Chrome&apos;s built-in Writer and Summarizer APIs. 
-                  Make sure you&apos;re using Chrome 138+ with AI features enabled.
-                </p>
-              </div>
-            </div>
-          </div>
           {/* Resume Selection */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Select Resume</label>

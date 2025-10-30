@@ -271,7 +271,7 @@ export default function CoverLetterEditorPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-48px)] overflow-y-auto flex-col bg-background">
+    <div className="flex h-[calc(100vh-48px)] overflow-hidden flex-col bg-background">
       {/* Loading overlay for document loading */}
       {isLoading && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -432,7 +432,7 @@ export default function CoverLetterEditorPage() {
       </div>
 
       {/* Editor Area */}
-      <div className="flex-1 overflow-hidden bg-background">
+      <div className="flex-1 h-[calc(100vh-122px)] overflow-y-auto bg-background">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -441,8 +441,8 @@ export default function CoverLetterEditorPage() {
             </div>
           </div>
         ) : (
-          <div className="h-full p-6">
-            <div className="max-w-4xl mx-auto h-full">
+          <div className="h-[calc(100vh-122px)] overflow-y-auto p-6">
+            <div className="max-w-4xl mx-auto">
               <ForwardRefEditor
                 ref={editorRef}
                 markdown={content}
