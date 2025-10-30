@@ -18,7 +18,7 @@ export default function Home() {
           <div className="hidden items-center gap-4 md:flex">
             <a className="rounded-full px-4 py-2 text-sm font-medium text-zinc-800 dark:text-zinc-50" href="#features">Features</a>
             <a className="rounded-full border border-black/10 px-4 py-2 text-sm dark:border-white/10" href="#examples">Examples</a>
-            <Link className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-95" href="/app/editor">Create resume — it&apos;s free</Link>
+            <Link className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-95" href="/app/editor/resume">Create resume — it&apos;s free</Link>
           </div>
         </nav>
       </header>
@@ -30,7 +30,7 @@ export default function Home() {
             <p className="max-w-xl text-lg text-zinc-700 dark:text-zinc-300">Create a professional, ATS-friendly resume in minutes. Use our AI to tailor content for the job you want — for free. No sign-up required to prototype.</p>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link className="inline-flex items-center justify-center rounded-full bg-foreground px-5 py-3 text-sm font-semibold text-background shadow-md hover:shadow-lg" href="/app/editor">Get started — it&apos;s free</Link>
+              <Link className="inline-flex items-center justify-center rounded-full bg-foreground px-5 py-3 text-sm font-semibold text-background shadow-md hover:shadow-lg" href="/app/editor/resume">Get started — it&apos;s free</Link>
               <a className="inline-flex items-center justify-center rounded-full border border-black/10 px-5 py-3 text-sm dark:border-white/10" href="#features">See features</a>
             </div>
 
@@ -71,7 +71,7 @@ export default function Home() {
 
               <div className="mt-6 flex items-center justify-between">
                 <div className="text-xs text-zinc-500 dark:text-zinc-400">Generated with AI • ATS-Optimized</div>
-                <Link className="rounded-md bg-zinc-100/80 px-3 py-1 text-sm dark:bg-white/6" href="/app/editor">Edit</Link>
+                <Link className="rounded-md bg-zinc-100/80 px-3 py-1 text-sm dark:bg-white/6" href="/app/editor/resume">Edit</Link>
               </div>
             </div>
           </div>
@@ -102,12 +102,12 @@ export default function Home() {
         <section id="examples" className="mt-16">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold">Examples</h3>
-            <Link className="text-sm text-zinc-700 dark:text-zinc-300" href="/app/editor">Create your own</Link>
+            <Link className="text-sm text-zinc-700 dark:text-zinc-300" href="/app/editor/resume">Create your own</Link>
           </div>
 
           <div className="mt-6 grid gap-6 sm:grid-cols-2 md:grid-cols-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="rounded-lg border border-black/6 bg-[var(--card)] p-4 shadow-sm">
+              <div key={i} className="rounded-lg border border-black/6 bg-[--card] p-4 shadow-sm">
                 <div className="h-32 rounded bg-zinc-100 dark:bg-white/6" />
                 <div className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">Template {i + 1}</div>
               </div>

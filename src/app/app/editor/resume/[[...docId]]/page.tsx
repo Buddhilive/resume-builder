@@ -153,12 +153,12 @@ export default function EditorPage() {
         } else {
           toast.error("Resume not found");
           // Redirect to new document if not found
-          router.push("/app/editor");
+          router.push("/app/editor/resume");
         }
       } catch (error) {
         console.error("Failed to load document:", error);
         toast.error("Failed to load resume");
-        router.push("/app/editor");
+        router.push("/app/editor/resume");
       } finally {
         setIsLoading(false);
       }
@@ -250,7 +250,7 @@ export default function EditorPage() {
         setCurrentDocument(newDocument);
 
         // Update URL to include the document ID
-        router.push(`/app/editor/${savedDocumentId}`);
+        router.push(`/app/editor/resume/${savedDocumentId}`);
         toast.success(`Resume "${documentName}" created successfully`);
       } else {
         // Update existing document
@@ -292,7 +292,7 @@ export default function EditorPage() {
       toast.success(`Resume "${currentDocument.name}" deleted successfully`);
 
       // Redirect to new document
-      router.push("/app/editor");
+      router.push("/app/editor/resume");
 
       console.log("Resume deleted successfully:", {
         documentId: currentDocument.id,

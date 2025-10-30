@@ -134,7 +134,7 @@ export default function ResumesPage() {
             <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">My Resumes</h1>
             <p className="text-gray-600 dark:text-gray-400">Manage and edit your resume documents</p>
           </div>
-          <Link href="/app/editor">
+          <Link href="/app/editor/resume">
             <Button className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               New Resume
@@ -148,7 +148,7 @@ export default function ResumesPage() {
             <FileText className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No resumes yet</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">Create your first resume to get started</p>
-            <Link href="/app/editor">
+            <Link href="/app/editor/resume">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Create New Resume
@@ -197,7 +197,7 @@ export default function ResumesPage() {
                         <div className="flex items-center gap-3">
                           <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                           <Link 
-                            href={`/app/editor/${resume.id}`}
+                            href={`/app/editor/resume/${resume.id}`}
                             className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400"
                           >
                             {resume.name}
@@ -212,7 +212,7 @@ export default function ResumesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Link href={`/app/editor/${resume.id}`}>
+                          <Link href={`/app/editor/resume/${resume.id}`}>
                             <Button
                               variant="outline"
                               size="sm"

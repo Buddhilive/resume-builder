@@ -48,7 +48,7 @@ const data = {
     },
     {
       title: "New Resume",
-      url: "/app/editor",
+      url: "/app/editor/resume",
       icon: FilePlus,
     },
   ],
