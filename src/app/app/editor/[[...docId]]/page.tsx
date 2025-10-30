@@ -9,7 +9,13 @@ import { PreviewModal } from "@/components/preview-modal";
 // import { ATSValidator } from "@/components/ats-validator";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { usePDFExport } from "@/hooks/use-pdf-export";
 import {
   Eye,
@@ -30,11 +36,11 @@ import {
 } from "@/lib/db";
 import { toast } from "sonner";
 import { isBuiltInAIAvailabile } from "@/lib/provider";
-import { 
-  translateResumeData, 
-  checkTranslationAvailability, 
+import {
+  translateResumeData,
+  checkTranslationAvailability,
   SUPPORTED_LANGUAGES,
-  type SupportedLanguageCode 
+  type SupportedLanguageCode,
 } from "@/lib/ai/translator";
 
 export default function EditorPage() {
@@ -59,9 +65,11 @@ export default function EditorPage() {
   });
   const [isAIEnabled, setIsAIEnabled] = useState(false);
   const [isTranslationAvailable, setIsTranslationAvailable] = useState(false);
-  const [selectedTargetLanguage, setSelectedTargetLanguage] = useState<SupportedLanguageCode>('en');
+  const [selectedTargetLanguage, setSelectedTargetLanguage] =
+    useState<SupportedLanguageCode>("en");
   const [isTranslating, setIsTranslating] = useState(false);
   const [translationProgress, setTranslationProgress] = useState(0);
+  const [forceRender, setForceRender] = useState(0); // Force Puck re-mount
 
   // Function to validate and normalize resume data
   const normalizeResumeData = (rawData: ResumeData): ResumeData => {
@@ -83,21 +91,16 @@ export default function EditorPage() {
   // Create a stable key for Puck component
   const puckKey = React.useMemo(() => {
     const baseKey = documentId || "new-document";
-    const dataSignature =
-      data.content.length > 0 ? `_${data.content.length}` : "";
-    return `${baseKey}${dataSignature}_${isDataReady}`;
-  }, [documentId, data.content.length, isDataReady]);
+    return `${baseKey}_${forceRender}_${isDataReady}`;
+  }, [documentId, forceRender, isDataReady]);
 
   // Create a memoized version of the Puck data to ensure proper re-rendering
   const puckData = React.useMemo(() => {
-    const clonedData = JSON.parse(JSON.stringify(data)); // Deep clone to ensure Puck detects changes
     console.log("Puck data memoized:", {
-      original: data,
-      cloned: clonedData,
-      contentLength: clonedData.content?.length || 0,
-      hasChanged: JSON.stringify(data) !== JSON.stringify(clonedData),
+      contentLength: data.content?.length || 0,
+      timestamp: new Date().toISOString(),
     });
-    return clonedData;
+    return data; // Return data directly without cloning
   }, [data]);
 
   // Effect to load document when component mounts or documentId changes
@@ -133,6 +136,9 @@ export default function EditorPage() {
           const normalizedData = normalizeResumeData(document.data);
           setData(normalizedData);
           setLastSaved(document.modifiedAt);
+
+          // Force Puck to re-mount with loaded data
+          setForceRender((prev) => prev + 1);
 
           // Add a small delay to ensure state is fully updated
           setTimeout(() => {
@@ -184,7 +190,7 @@ export default function EditorPage() {
   const checkAIAvailability = async () => {
     const isAIAvailable = await isBuiltInAIAvailabile();
     setIsAIEnabled(isAIAvailable);
-    
+
     if (isAIAvailable) {
       const isTranslationReady = await checkTranslationAvailability();
       setIsTranslationAvailable(isTranslationReady);
@@ -208,7 +214,13 @@ export default function EditorPage() {
   };
 
   // Add effect to track data changes
-  useEffect(() => {}, [data, isDataReady, currentDocument, isAIEnabled, isTranslationAvailable]);
+  useEffect(() => {}, [
+    data,
+    isDataReady,
+    currentDocument,
+    isAIEnabled,
+    isTranslationAvailable,
+  ]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -341,11 +353,20 @@ export default function EditorPage() {
       // Update the data with translated content
       setData(result.data);
 
+      // Force Puck to re-mount with new data
+      setForceRender((prev) => prev + 1);
+
       // Log the translation action
       logChange("translate", undefined, undefined);
 
       toast.success(
-        `Resume translated from ${SUPPORTED_LANGUAGES[result.sourceLanguage as SupportedLanguageCode] || result.sourceLanguage} to ${SUPPORTED_LANGUAGES[result.targetLanguage as SupportedLanguageCode] || result.targetLanguage}`
+        `Resume translated from ${
+          SUPPORTED_LANGUAGES[result.sourceLanguage as SupportedLanguageCode] ||
+          result.sourceLanguage
+        } to ${
+          SUPPORTED_LANGUAGES[result.targetLanguage as SupportedLanguageCode] ||
+          result.targetLanguage
+        }`
       );
 
       console.log("Translation completed successfully:", {
@@ -355,7 +376,9 @@ export default function EditorPage() {
       });
     } catch (error) {
       console.error("Translation failed:", error);
-      toast.error(error instanceof Error ? error.message : "Translation failed");
+      toast.error(
+        error instanceof Error ? error.message : "Translation failed"
+      );
     } finally {
       setIsTranslating(false);
       setTranslationProgress(0);
@@ -558,39 +581,6 @@ export default function EditorPage() {
               </div>
             )} */}
 
-            {isAIEnabled && isTranslationAvailable && (
-              <>
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={selectedTargetLanguage}
-                    onValueChange={(value: SupportedLanguageCode) => setSelectedTargetLanguage(value)}
-                  >
-                    <SelectTrigger className="w-[120px] h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(SUPPORTED_LANGUAGES).map(([code, name]) => (
-                        <SelectItem key={code} value={code}>
-                          {name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    onClick={handleTranslate}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                    title="Translate Resume"
-                    disabled={isTranslating || isLoading}
-                  >
-                    <Languages className="h-4 w-4" />
-                    {isTranslating ? `${translationProgress}%` : 'Translate'}
-                  </Button>
-                </div>
-              </>
-            )}
-
             {/* Delete button - only show for existing documents */}
             {currentDocument && (
               <Button
@@ -682,17 +672,42 @@ export default function EditorPage() {
                 overrides={{
                   headerActions: ({ children }) => (
                     <>
-                      {isAIEnabled && (
+                      {isAIEnabled && isTranslationAvailable && (
                         <>
-                          <Button
-                            onClick={() => setIsPreviewOpen(true)}
-                            variant="outline"
-                            size="sm"
-                            className="flex items-center gap-2"
-                            title="Preview"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={selectedTargetLanguage}
+                              onValueChange={(value: SupportedLanguageCode) =>
+                                setSelectedTargetLanguage(value)
+                              }
+                            >
+                              <SelectTrigger className="w-[120px] h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Object.entries(SUPPORTED_LANGUAGES).map(
+                                  ([code, name]) => (
+                                    <SelectItem key={code} value={code}>
+                                      {name}
+                                    </SelectItem>
+                                  )
+                                )}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              onClick={handleTranslate}
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center gap-2"
+                              title="Translate Resume"
+                              disabled={isTranslating || isLoading}
+                            >
+                              <Languages className="h-4 w-4" />
+                              {isTranslating
+                                ? `${translationProgress}%`
+                                : "Translate"}
+                            </Button>
+                          </div>
                         </>
                       )}
                       <Button
@@ -703,6 +718,7 @@ export default function EditorPage() {
                         title="Preview"
                       >
                         <Eye className="h-4 w-4" />
+                        Preview
                       </Button>
                     </>
                   ),
