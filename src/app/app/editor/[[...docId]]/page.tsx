@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Trash2,
   Loader2,
+  Languages,
 } from "lucide-react";
 import { ResumeData } from "@/lib/pdf-utils";
 import {
@@ -27,6 +28,7 @@ import {
   ResumeDocument,
 } from "@/lib/db";
 import { toast } from "sonner";
+import { isBuiltInAIAvailabile } from "@/lib/provider";
 
 export default function EditorPage() {
   const params = useParams();
@@ -48,6 +50,7 @@ export default function EditorPage() {
     content: [],
     root: {},
   });
+  let [isAIEnabled, setIsAIEnabled] = useState(false);
 
   // Function to validate and normalize resume data
   const normalizeResumeData = (rawData: ResumeData): ResumeData => {
@@ -145,6 +148,7 @@ export default function EditorPage() {
     };
 
     loadDocument();
+    checkAIAvailability();
   }, [documentId, router]);
 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -166,6 +170,11 @@ export default function EditorPage() {
     }>
   >([]);
 
+  const checkAIAvailability = async () => {
+    const isAIAvailable = await isBuiltInAIAvailabile();
+    setIsAIEnabled(isAIAvailable);
+  };
+
   // Log changes for debugging and analytics
   const logChange = (
     action: string,
@@ -183,27 +192,7 @@ export default function EditorPage() {
   };
 
   // Add effect to track data changes
-  React.useEffect(() => {
-    console.log("📊 Data state changed:", {
-      contentLength: data.content.length,
-      timestamp: new Date().toISOString(),
-      isDataReady,
-      hasDocument: !!currentDocument,
-    });
-  }, [data, isDataReady, currentDocument]);
-
-  // Effect to handle data changes and trigger ATS recalculation
-  useEffect(() => {
-    // This will trigger the ATS validator to recalculate when data changes
-    // The ATSValidator component will automatically update the score via onScoreChange
-    console.log(
-      "Resume data changed, components:",
-      data.content.map((c) => ({
-        type: c.type,
-        id: c.props?.id,
-      }))
-    );
-  }, [data]);
+  useEffect(() => {}, [data, isDataReady, currentDocument, isAIEnabled]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -455,32 +444,6 @@ export default function EditorPage() {
     });
   };
 
-  // Debug function to manually test data loading (development only)
-  const addTestData = () => {
-    if (process.env.NODE_ENV === "development") {
-      const testData: ResumeData = {
-        content: [
-          {
-            type: "ResumeHeader",
-            props: {
-              id: "header-1",
-              fullName: "Test User",
-              email: "test@example.com",
-              phone: "123-456-7890",
-              location: "Test City, TC",
-              website: "www.test.com",
-              linkedin: "linkedin.com/in/test",
-            },
-          },
-        ],
-        root: {},
-      };
-
-      console.log("🧪 Adding test data:", testData);
-      setData(testData);
-    }
-  };
-
   return (
     <div className="flex h-[calc(100vh-48px)] overflow-y-auto flex-col bg-background">
       {/* Loading overlay for document loading */}
@@ -533,10 +496,24 @@ export default function EditorPage() {
           {/* Right Section - Actions */}
           <div className="flex items-center gap-2">
             {/* Recent changes indicator */}
-            {changeLog.length > 0 && (
+            {/* {changeLog.length > 0 && (
               <div className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded">
                 Last: {changeLog[changeLog.length - 1]?.action}
               </div>
+            )} */}
+
+            {isAIEnabled && (
+              <>
+                <Button
+                  onClick={() => setIsPreviewOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                  title="Translate Resume"
+                >
+                  <Languages className="h-4 w-4" />
+                </Button>
+              </>
             )}
 
             {/* Delete button - only show for existing documents */}
@@ -629,15 +606,30 @@ export default function EditorPage() {
                 }}
                 overrides={{
                   headerActions: ({ children }) => (
-                    <Button
-                      onClick={() => setIsPreviewOpen(true)}
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-2"
-                      title="Preview"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
+                    <>
+                      {isAIEnabled && (
+                        <>
+                          <Button
+                            onClick={() => setIsPreviewOpen(true)}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2"
+                            title="Preview"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                      <Button
+                        onClick={() => setIsPreviewOpen(true)}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        title="Preview"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </>
                   ),
                 }}
                 iframe={{ enabled: false }}
