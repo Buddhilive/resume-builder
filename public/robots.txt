@@ -1,0 +1,36 @@
+# Resume Builder - Robots.txt
+# This file tells search engine crawlers which pages to access on your site.
+
+User-agent: *
+Allow: /
+
+# Allow all important pages
+Allow: /app/editor/resume
+Allow: /app/editor/cover-letter
+Allow: /app/resumes
+Allow: /app/cover-letters
+Allow: /app/settings
+
+# Block dynamic editor pages with specific document IDs (to avoid duplicate content)
+Disallow: /app/editor/resume/*/
+Disallow: /app/editor/cover-letter/*/
+
+# Block any admin or private areas (if they exist)
+Disallow: /admin/
+Disallow: /api/
+
+# Allow static assets
+Allow: /*.css
+Allow: /*.js
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.gif
+Allow: /*.svg
+Allow: /*.ico
+
+# Sitemap location
+Sitemap: https://resume-builder.buddhilive.com/sitemap.xml
+
+# Crawl delay (optional - helps prevent overloading the server)
+Crawl-delay: 1
