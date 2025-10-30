@@ -189,3 +189,11 @@
     letter-spacing: var(--tracking-normal);
   }
 }
+
+.dark .mdxeditor {
+  background-color: var(--card);
+}
+
+.dark .mdxeditor ._contentEditable_1e2ox_380 {
+  color: var(--foreground) !important;
+}

@@ -33,9 +33,10 @@ export default function AppLayout({
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/">
-                    Resume Builder
-                  </BreadcrumbLink>
+                  <BreadcrumbLink href="/">Resume Builder</BreadcrumbLink>
+                  <span className="ml-2 rounded-full bg-slate-100/60 px-2 py-0.5 text-sm font-medium text-slate-800 dark:bg-slate-900/40 dark:text-slate-300">
+                    Beta
+                  </span>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
