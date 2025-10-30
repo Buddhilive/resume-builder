@@ -10,6 +10,14 @@ const nextConfig: NextConfig = {
       },
     ]
   },
+  transpilePackages: ['@mdxeditor/editor'],
+  // Empty turbopack config to silence the warning
+  turbopack: {},
+  webpack: (config) => {
+    // Support for MDXEditor ESM modules
+    config.experiments = { ...config.experiments, topLevelAwait: true }
+    return config
+  }
 };
 
 export default nextConfig;
