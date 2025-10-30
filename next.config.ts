@@ -7,15 +7,6 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  async redirects() {
-    return [
-      {
-        source: '/app',
-        destination: '/app/resumes',
-        permanent: true,
-      },
-    ]
-  },
   transpilePackages: ['@mdxeditor/editor'],
   // Empty turbopack config to silence the warning
   turbopack: {},
