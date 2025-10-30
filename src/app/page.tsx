@@ -51,7 +51,7 @@ export default function Home() {
           </div>
 
           <div className="relative">
-            <div className="mx-auto max-w-md transform rounded-2xl border border-black/6 bg-[var(--card)] p-6 shadow-lg md:max-w-none">
+            <div className="mx-auto max-w-md transform rounded-2xl border border-black/6 bg-[--card] p-6 shadow-lg md:max-w-none">
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="text-lg font-semibold">Jane Doe</h3>
@@ -92,7 +92,7 @@ export default function Home() {
               desc: 'We format your resume so applicant tracking systems can read it reliably.'
             }
           ].map((f) => (
-            <div key={f.title} className="rounded-xl border border-black/6 bg-[var(--card)] p-6 shadow-sm">
+            <div key={f.title} className="rounded-xl border border-black/6 bg-[--card] p-6 shadow-sm">
               <h4 className="mb-2 text-lg font-semibold">{f.title}</h4>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">{f.desc}</p>
             </div>

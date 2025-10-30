@@ -4,7 +4,8 @@ import * as React from "react"
 import {
   FileText,
   FileUser,
-  Home
+  Home,
+  Settings
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -50,6 +51,11 @@ const data = {
       title: "Cover Letters",
       url: "/app/cover-letters",
       icon: FileText,
+    },
+    {
+      title: "Settings",
+      url: "/app/settings",
+      icon: Settings,
     },
   ],
   projects: [
