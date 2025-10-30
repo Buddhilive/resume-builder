@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import {
-  FilePlus,
+  FileText,
   FileUser,
   Home
 } from "lucide-react"
@@ -47,9 +47,9 @@ const data = {
       icon: FileUser,
     },
     {
-      title: "New Resume",
-      url: "/app/editor/resume",
-      icon: FilePlus,
+      title: "Cover Letters",
+      url: "/app/cover-letters",
+      icon: FileText,
     },
   ],
   projects: [
