@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Children } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Puck, Config } from "@measured/puck";
 import "@measured/puck/puck.css";
@@ -178,14 +178,14 @@ export default function EditorPage() {
     usePDFExport();
 
   // Track changes for better debugging and analytics
-  const [changeLog, setChangeLog] = useState<
+  /* const [changeLog, setChangeLog] = useState<
     Array<{
       timestamp: number;
       action: string;
       componentType?: string;
       componentId?: string;
     }>
-  >([]);
+  >([]); */
 
   const checkAIAvailability = async () => {
     const isAIAvailable = await isBuiltInAIAvailabile();
@@ -209,7 +209,7 @@ export default function EditorPage() {
       componentType,
       componentId,
     };
-    setChangeLog((prev) => [...prev, logEntry]);
+    // setChangeLog((prev) => [...prev, logEntry]);
     console.log("Resume change:", logEntry);
   };
 
@@ -670,7 +670,7 @@ export default function EditorPage() {
                   handlePuckChange(newData);
                 }}
                 overrides={{
-                  headerActions: ({ children }) => (
+                  headerActions: () => (
                     <>
                       {isAIEnabled && isTranslationAvailable && (
                         <>

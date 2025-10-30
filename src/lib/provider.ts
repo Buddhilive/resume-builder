@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const isBuiltInAIAvailabile = async () => {
-  const isLanguageModelAvailable =
-    await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).LanguageModel.availability();
+  const isLanguageModelAvailable = await (
+    window as any
+  ).LanguageModel.availability();
   if (isLanguageModelAvailable === "available") {
     return true;
   }
