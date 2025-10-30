@@ -9,6 +9,7 @@ import { PreviewModal } from "@/components/preview-modal";
 // import { ATSValidator } from "@/components/ats-validator";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePDFExport } from "@/hooks/use-pdf-export";
 import {
   Eye,
@@ -29,6 +30,12 @@ import {
 } from "@/lib/db";
 import { toast } from "sonner";
 import { isBuiltInAIAvailabile } from "@/lib/provider";
+import { 
+  translateResumeData, 
+  checkTranslationAvailability, 
+  SUPPORTED_LANGUAGES,
+  type SupportedLanguageCode 
+} from "@/lib/ai/translator";
 
 export default function EditorPage() {
   const params = useParams();
@@ -51,6 +58,10 @@ export default function EditorPage() {
     root: {},
   });
   let [isAIEnabled, setIsAIEnabled] = useState(false);
+  const [isTranslationAvailable, setIsTranslationAvailable] = useState(false);
+  const [selectedTargetLanguage, setSelectedTargetLanguage] = useState<SupportedLanguageCode>('en');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationProgress, setTranslationProgress] = useState(0);
 
   // Function to validate and normalize resume data
   const normalizeResumeData = (rawData: ResumeData): ResumeData => {
@@ -173,6 +184,11 @@ export default function EditorPage() {
   const checkAIAvailability = async () => {
     const isAIAvailable = await isBuiltInAIAvailabile();
     setIsAIEnabled(isAIAvailable);
+    
+    if (isAIAvailable) {
+      const isTranslationReady = await checkTranslationAvailability();
+      setIsTranslationAvailable(isTranslationReady);
+    }
   };
 
   // Log changes for debugging and analytics
@@ -192,7 +208,7 @@ export default function EditorPage() {
   };
 
   // Add effect to track data changes
-  useEffect(() => {}, [data, isDataReady, currentDocument, isAIEnabled]);
+  useEffect(() => {}, [data, isDataReady, currentDocument, isAIEnabled, isTranslationAvailable]);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -303,6 +319,46 @@ export default function EditorPage() {
     } catch (error) {
       console.error("PDF export failed:", error);
       // Error is handled by the hook
+    }
+  };
+
+  const handleTranslate = async () => {
+    if (!isTranslationAvailable || !selectedTargetLanguage) {
+      toast.error("Translation is not available");
+      return;
+    }
+
+    setIsTranslating(true);
+    setTranslationProgress(0);
+
+    try {
+      const result = await translateResumeData(
+        data,
+        { targetLanguage: selectedTargetLanguage },
+        (progress) => setTranslationProgress(progress)
+      );
+
+      // Update the data with translated content
+      setData(result.data);
+
+      // Log the translation action
+      logChange("translate", undefined, undefined);
+
+      toast.success(
+        `Resume translated from ${SUPPORTED_LANGUAGES[result.sourceLanguage as SupportedLanguageCode] || result.sourceLanguage} to ${SUPPORTED_LANGUAGES[result.targetLanguage as SupportedLanguageCode] || result.targetLanguage}`
+      );
+
+      console.log("Translation completed successfully:", {
+        sourceLanguage: result.sourceLanguage,
+        targetLanguage: result.targetLanguage,
+        confidence: result.confidence,
+      });
+    } catch (error) {
+      console.error("Translation failed:", error);
+      toast.error(error instanceof Error ? error.message : "Translation failed");
+    } finally {
+      setIsTranslating(false);
+      setTranslationProgress(0);
     }
   };
 
@@ -509,10 +565,43 @@ export default function EditorPage() {
                   variant="outline"
                   size="sm"
                   className="flex items-center gap-2"
-                  title="Translate Resume"
+                  title="Preview"
                 >
-                  <Languages className="h-4 w-4" />
+                  <Eye className="h-4 w-4" />
                 </Button>
+              </>
+            )}
+
+            {isAIEnabled && isTranslationAvailable && (
+              <>
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={selectedTargetLanguage}
+                    onValueChange={(value: SupportedLanguageCode) => setSelectedTargetLanguage(value)}
+                  >
+                    <SelectTrigger className="w-[120px] h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(SUPPORTED_LANGUAGES).map(([code, name]) => (
+                        <SelectItem key={code} value={code}>
+                          {name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={handleTranslate}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                    title="Translate Resume"
+                    disabled={isTranslating || isLoading}
+                  >
+                    <Languages className="h-4 w-4" />
+                    {isTranslating ? `${translationProgress}%` : 'Translate'}
+                  </Button>
+                </div>
               </>
             )}
 
