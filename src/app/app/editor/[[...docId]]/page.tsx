@@ -724,6 +724,7 @@ export default function EditorPage() {
                   ),
                 }}
                 iframe={{ enabled: false }}
+                headerTitle={documentName}
               />
             </div>
           )}
