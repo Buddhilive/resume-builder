@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { getAllResumeDocuments, ResumeDocument } from "@/lib/db";
-import { generateCoverLetter, CoverLetterWriteRequest } from "@/lib/ai/writer";
+import { createAISessions, generateCoverLetter, CoverLetterWriteRequest, AISession } from "@/lib/ai/writer";
 import { Loader2, Search, Sparkles, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -94,7 +94,19 @@ export function AIWriterDialog({
     setIsLoading(true);
     setGenerationProgress(0);
 
+    let writer: AISession | null = null;
+    let summarizer: AISession | null = null;
+
     try {
+      // Step 1: Create AI sessions with user gesture (must be done here)
+      const sessions = await createAISessions((progress) => {
+        setGenerationProgress(progress.loaded);
+      });
+      
+      writer = sessions.writer;
+      summarizer = sessions.summarizer;
+
+      // Step 2: Generate cover letter using the sessions
       const request: CoverLetterWriteRequest = {
         jobDescription: jobDescription.trim(),
         resumeDocument: selectedResume,
@@ -107,6 +119,8 @@ export function AIWriterDialog({
 
       const generatedContent = await generateCoverLetter(
         request,
+        writer,
+        summarizer,
         (progress) => {
           setGenerationProgress(progress.loaded);
         }
@@ -123,6 +137,18 @@ export function AIWriterDialog({
           : "Failed to generate cover letter"
       );
     } finally {
+      // Clean up AI sessions
+      try {
+        if (writer?.destroy) {
+          writer.destroy();
+        }
+        if (summarizer?.destroy) {
+          summarizer.destroy();
+        }
+      } catch (cleanupError) {
+        console.warn("Failed to cleanup AI sessions:", cleanupError);
+      }
+      
       setIsLoading(false);
       setGenerationProgress(0);
     }
@@ -250,10 +276,14 @@ export function AIWriterDialog({
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span className="text-sm">
-                  {generationProgress < 40
-                    ? "Summarizing resume..."
+                  {generationProgress < 10
+                    ? "Initializing AI..."
                     : generationProgress < 60
-                    ? "Setting up AI writer..."
+                    ? "Setting up AI models..."
+                    : generationProgress < 70
+                    ? "Analyzing resume..."
+                    : generationProgress < 80
+                    ? "Summarizing experience..."
                     : "Generating cover letter..."}
                 </span>
               </div>

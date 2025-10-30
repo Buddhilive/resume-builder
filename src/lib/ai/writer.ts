@@ -1,6 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ResumeDocument } from "../db";
 
+export interface AISession {
+  destroy?: () => void;
+  write: (prompt: string, options?: any) => Promise<string>;
+  writeStreaming: (prompt: string, options?: any) => AsyncIterable<string>;
+  summarize: (text: string, options?: any) => Promise<string>;
+}
+
 export interface WriterOptions {
   tone?: 'formal' | 'neutral' | 'casual';
   format?: 'markdown' | 'plain-text';
@@ -83,61 +90,106 @@ export async function summarizeResumeContent(
 }
 
 /**
- * Generates a cover letter using the Writer API
+ * Creates AI sessions with user gesture (must be called from user interaction)
  */
-export async function generateCoverLetter(
-  request: CoverLetterWriteRequest,
-  progressCallback?: ProgressCallback
-): Promise<string> {
+export async function createAISessions(progressCallback?: ProgressCallback): Promise<{
+  writer: AISession;
+  summarizer: AISession;
+}> {
   try {
+    // Check Writer availability
     if (!('Writer' in window)) {
       throw new Error('Writer API is not available');
     }
-
-    // Check availability
-    const availability = await (window as any).Writer.availability();
-    if (availability === 'unavailable') {
-      throw new Error('Writer API is not available');
+    
+    // Check Summarizer availability
+    if (!('Summarizer' in window)) {
+      throw new Error('Summarizer API is not available');
     }
 
-    // First, summarize the resume content
+    const writerAvailability = await (window as any).Writer.availability();
+    const summarizerAvailability = await (window as any).Summarizer.availability();
+
+    if (writerAvailability === 'unavailable') {
+      throw new Error('Writer API is not available');
+    }
+    
+    if (summarizerAvailability === 'unavailable') {
+      throw new Error('Summarizer API is not available');
+    }
+
     progressCallback?.({ loaded: 10, total: 100 });
-    const resumeSummary = await summarizeResumeContent(
-      request.resumeDocument,
-      (progress) => {
-        // Map summarizer progress to 10-40% of total progress
-        progressCallback?.({ loaded: 10 + (progress.loaded * 30), total: 100 });
-      }
-    );
 
-    progressCallback?.({ loaded: 40, total: 100 });
-
-    // Create writer with options
-    const writerOptions: WriterOptions = {
-      tone: 'formal',
-      format: 'markdown',
-      length: 'medium',
-      sharedContext: 'This is a professional cover letter for a job application. The letter should be personalized, engaging, and highlight relevant qualifications from the applicant\'s resume.',
-      expectedInputLanguages: ['en'],
-      expectedContextLanguages: ['en'],
-      outputLanguage: 'en',
-      ...request.options
-    };
-
-    const writer = await (window as any).Writer.create({
-      ...writerOptions,
-      monitor: progressCallback ? (m: any) => {
-        m.addEventListener('downloadprogress', (e: any) => {
-          // Map writer download progress to 40-60% of total progress
-          progressCallback({
-            loaded: 40 + (e.loaded * 20),
-            total: 100
+    // Create both sessions with user gesture
+    const [writer, summarizer] = await Promise.all([
+      (window as any).Writer.create({
+        tone: 'formal',
+        format: 'markdown',
+        length: 'medium',
+        sharedContext: 'This is a professional cover letter for a job application. The letter should be personalized, engaging, and highlight relevant qualifications from the applicant\'s resume.',
+        expectedInputLanguages: ['en'],
+        expectedContextLanguages: ['en'],
+        outputLanguage: 'en',
+        monitor: progressCallback ? (m: any) => {
+          m.addEventListener('downloadprogress', (e: any) => {
+            progressCallback({
+              loaded: 10 + (e.loaded * 30),
+              total: 100
+            });
           });
-        });
-      } : undefined
-    });
+        } : undefined
+      }),
+      (window as any).Summarizer.create({
+        type: 'key-points',
+        format: 'plain-text',
+        length: 'medium',
+        sharedContext: 'This is a professional resume that needs to be summarized for context in cover letter generation.',
+        monitor: progressCallback ? (m: any) => {
+          m.addEventListener('downloadprogress', (e: any) => {
+            progressCallback({
+              loaded: 40 + (e.loaded * 20),
+              total: 100
+            });
+          });
+        } : undefined
+      })
+    ]);
 
     progressCallback?.({ loaded: 60, total: 100 });
+
+    return { writer, summarizer };
+  } catch (error) {
+    console.error('Failed to create AI sessions:', error);
+    throw new Error(
+      error instanceof Error 
+        ? `Failed to create AI sessions: ${error.message}`
+        : 'Failed to create AI sessions'
+    );
+  }
+}
+
+/**
+ * Generates a cover letter using pre-created AI sessions
+ */
+export async function generateCoverLetter(
+  request: CoverLetterWriteRequest,
+  writer: AISession,
+  summarizer: AISession,
+  progressCallback?: ProgressCallback
+): Promise<string> {
+  try {
+    progressCallback?.({ loaded: 60, total: 100 });
+
+    // Extract and summarize the resume content
+    const resumeText = extractResumeText(request.resumeDocument);
+    
+    progressCallback?.({ loaded: 70, total: 100 });
+
+    const resumeSummary = await summarizer.summarize(resumeText, {
+      context: `Professional resume for ${request.resumeDocument.name}. Focus on key skills, experience, and qualifications.`
+    });
+
+    progressCallback?.({ loaded: 80, total: 100 });
 
     // Generate the cover letter
     const prompt = `Write a professional cover letter for the following job position: "${request.jobDescription}". 
@@ -159,11 +211,6 @@ The cover letter should:
 
     progressCallback?.({ loaded: 100, total: 100 });
 
-    // Clean up
-    if (writer.destroy) {
-      writer.destroy();
-    }
-
     return coverLetter;
   } catch (error) {
     console.error('Cover letter generation failed:', error);
@@ -176,60 +223,28 @@ The cover letter should:
 }
 
 /**
- * Generates a cover letter with streaming output
+ * Generates a cover letter with streaming output using pre-created AI sessions
  */
 export async function generateCoverLetterStreaming(
   request: CoverLetterWriteRequest,
+  writer: AISession,
+  summarizer: AISession,
   onChunk: (chunk: string) => void,
   progressCallback?: ProgressCallback
 ): Promise<void> {
   try {
-    if (!('Writer' in window)) {
-      throw new Error('Writer API is not available');
-    }
+    progressCallback?.({ loaded: 60, total: 100 });
 
-    // Check availability
-    const availability = await (window as any).Writer.availability();
-    if (availability === 'unavailable') {
-      throw new Error('Writer API is not available');
-    }
+    // Extract and summarize the resume content
+    const resumeText = extractResumeText(request.resumeDocument);
+    
+    progressCallback?.({ loaded: 70, total: 100 });
 
-    // First, summarize the resume content
-    progressCallback?.({ loaded: 10, total: 100 });
-    const resumeSummary = await summarizeResumeContent(
-      request.resumeDocument,
-      (progress) => {
-        progressCallback?.({ loaded: 10 + (progress.loaded * 30), total: 100 });
-      }
-    );
-
-    progressCallback?.({ loaded: 40, total: 100 });
-
-    // Create writer with options
-    const writerOptions: WriterOptions = {
-      tone: 'formal',
-      format: 'markdown',
-      length: 'medium',
-      sharedContext: 'This is a professional cover letter for a job application. The letter should be personalized, engaging, and highlight relevant qualifications from the applicant\'s resume.',
-      expectedInputLanguages: ['en'],
-      expectedContextLanguages: ['en'],
-      outputLanguage: 'en',
-      ...request.options
-    };
-
-    const writer = await (window as any).Writer.create({
-      ...writerOptions,
-      monitor: progressCallback ? (m: any) => {
-        m.addEventListener('downloadprogress', (e: any) => {
-          progressCallback({
-            loaded: 40 + (e.loaded * 20),
-            total: 100
-          });
-        });
-      } : undefined
+    const resumeSummary = await summarizer.summarize(resumeText, {
+      context: `Professional resume for ${request.resumeDocument.name}. Focus on key skills, experience, and qualifications.`
     });
 
-    progressCallback?.({ loaded: 60, total: 100 });
+    progressCallback?.({ loaded: 80, total: 100 });
 
     // Generate the cover letter with streaming
     const prompt = `Write a professional cover letter for the following job position: "${request.jobDescription}". 
@@ -249,7 +264,7 @@ The cover letter should:
       context: `Applicant's resume summary: ${resumeSummary}. Job description: ${request.jobDescription}`
     });
 
-    let progress = 60;
+    let progress = 80;
     for await (const chunk of stream) {
       onChunk(chunk);
       progress = Math.min(95, progress + 1); // Gradually increase progress
@@ -257,11 +272,6 @@ The cover letter should:
     }
 
     progressCallback?.({ loaded: 100, total: 100 });
-
-    // Clean up
-    if (writer.destroy) {
-      writer.destroy();
-    }
   } catch (error) {
     console.error('Streaming cover letter generation failed:', error);
     throw new Error(
