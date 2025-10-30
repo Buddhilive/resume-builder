@@ -4,8 +4,7 @@ import * as React from "react"
 import {
   FilePlus,
   FileUser,
-  Home,
-  LayoutDashboard,
+  Home
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -43,9 +42,9 @@ const data = {
       isActive: true,
     },
     {
-      title: "Dashboard",
-      url: "/app/dashboard",
-      icon: LayoutDashboard,
+      title: "Resumes",
+      url: "/app/resumes",
+      icon: FileUser,
     },
     {
       title: "New Resume",

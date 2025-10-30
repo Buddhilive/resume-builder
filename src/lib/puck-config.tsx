@@ -1,5 +1,4 @@
 import { Config } from "@measured/puck";
-import React from "react";
 import {
   ResumeHeader,
   ResumeSummary,

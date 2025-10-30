@@ -32,7 +32,7 @@ import { getAllResumeDocuments, deleteResumeDocument, ResumeDocument } from "@/l
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { toast } from "sonner";
 
-export default function DashboardPage() {
+export default function ResumesPage() {
   const [resumes, setResumes] = useState<ResumeDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState("modified");

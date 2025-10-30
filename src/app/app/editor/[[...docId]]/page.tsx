@@ -619,12 +619,6 @@ export default function EditorPage() {
                 key={puckKey} // Use stable key for proper re-rendering
                 config={puckConfig as Config}
                 data={puckData}
-                onPublish={(publishData) => {
-                  console.log("Puck onPublish called with:", publishData);
-                  handlePuckChange(publishData);
-                  handleSave(); // Auto-save on publish
-                  console.log("Resume published:", publishData);
-                }}
                 ui={{
                   leftSideBarVisible: true,
                   rightSideBarVisible: true,
@@ -640,9 +634,9 @@ export default function EditorPage() {
                       variant="outline"
                       size="sm"
                       className="flex items-center gap-2"
+                      title="Preview"
                     >
                       <Eye className="h-4 w-4" />
-                      Preview
                     </Button>
                   ),
                 }}
