@@ -1,11 +1,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'export',
+  distDir: 'docs',
+  trailingSlash: true,
+  images: {
+    unoptimized: true,
+  },
   async redirects() {
     return [
       {
         source: '/app',
-        destination: '/app/resume',
+        destination: '/app/resumes',
         permanent: true,
       },
     ]
