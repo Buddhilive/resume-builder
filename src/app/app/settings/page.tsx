@@ -177,6 +177,7 @@ export default function SettingsPage() {
               <li>Restart Chrome</li>
               <li>Visit <code className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">chrome://components</code> and click "Check for update" on Optimization Guide On Device Model</li>
               <li>Refresh this page to check API availability</li>
+              <li>For more details <a href="https://www.buddhilive.com/docs/chrome-ai" target="_blank" className="text-blue-600 hover:underline">check the documentation</a></li>
             </ol>
           </div>
 

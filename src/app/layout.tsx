@@ -4,6 +4,7 @@ import "./globals.css";
 import "./resume-builder.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://resume-builder.buddhilive.com"),
   title: "Free AI Resume Builder & Cover Letter Generator | ATS-Friendly Templates",
   description:
     "Create professional, ATS-friendly resumes and cover letters for free with AI assistance. No sign-up required. Generate tailored content, translate documents, and export PDFs instantly. Perfect for job seekers worldwide.",
@@ -44,7 +46,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Free AI Resume Builder & Cover Letter Generator",
     description: "Create professional, ATS-friendly resumes and cover letters for free with AI assistance. No sign-up required.",
-    url: "https://resume-builder.com",
+    url: "https://resume-builder.buddhilive.com",
     siteName: "Resume Builder",
     locale: "en_US",
     type: "website",
@@ -73,10 +75,7 @@ export const metadata: Metadata = {
       "max-image-preview": "large",
       "max-snippet": -1,
     },
-  },
-  verification: {
-    google: "your-google-verification-code", // Replace with actual verification code
-  },
+  }
 };
 
 export default function RootLayout({
@@ -89,7 +88,7 @@ export default function RootLayout({
     "@type": "WebApplication",
     "name": "Resume Builder",
     "description": "Free AI-powered resume and cover letter builder with ATS-friendly templates",
-    "url": "https://resume-builder.com",
+    "url": "https://resume-builder.buddhilive.com",
     "applicationCategory": "BusinessApplication",
     "operatingSystem": "Web Browser",
     "offers": {
@@ -138,6 +137,7 @@ export default function RootLayout({
           <Toaster position="top-right" closeButton richColors />
         </ThemeProvider>
       </body>
+      <GoogleAnalytics gaId="G-FT5J0VPHFX" />
     </html>
   );
 }

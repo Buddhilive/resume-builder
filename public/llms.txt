@@ -1,0 +1,56 @@
+# Resume Builder
+
+> A free, AI-powered Next.js application for creating professional, ATS-friendly resumes and cover letters. Features drag-and-drop resume building with Puck CMS, AI-generated content using browser-native APIs, multi-language translation, PDF export, and MDX-based cover letter editing. Built with TypeScript, React 19, Tailwind CSS, and Radix UI components.
+
+## Key Features
+
+This application provides several core functionalities:
+
+- **Visual Resume Builder**: Uses @measured/puck for drag-and-drop resume components (header, summary, experience, education, skills, certifications)
+- **AI Content Generation**: Leverages browser-native AI APIs (Writer API, Summarizer API) for generating tailored cover letters and resume content
+- **Cover Letter Editor**: Rich text editing with @mdxeditor/editor supporting markdown formatting
+- **ATS Optimization**: Built-in ATS validator and compatibility checker for resumes
+- **PDF Export**: Client-side PDF generation using jsPDF and html2canvas
+- **Translation**: AI-powered translation for resumes and cover letters to multiple languages
+- **Local Storage**: All data stored locally using IndexedDB, no server required for basic functionality
+- **Responsive Design**: Mobile-friendly interface built with Tailwind CSS and Radix UI
+
+The application follows a component-based architecture with TypeScript for type safety and uses Next.js 16 with the App Router.
+
+## Core Implementation
+
+- [Resume Components](./src/components/resume-components.tsx): ATS-friendly React components for resume sections
+- [Puck Configuration](./src/lib/puck-config.tsx): Drag-and-drop editor configuration for resume building
+- [PDF Export Utilities](./src/lib/pdf-utils.ts): Client-side PDF generation and formatting logic
+- [AI Writer Implementation](./src/lib/ai/writer.ts): Browser-native AI integration for content generation
+- [ATS Validation](./src/lib/ats-utils.ts): Resume optimization scoring and compatibility checking
+- [Database Layer](./src/lib/db.ts): IndexedDB wrapper for local data persistence
+
+## User Interface
+
+- [Main Landing Page](./src/app/page.tsx): Application homepage with feature overview
+- [Resume Editor](./src/app/app/editor/resume/[[...docId]]/page.tsx): Visual resume builder interface
+- [Cover Letter Editor](./src/app/app/editor/cover-letter/[[...docId]]/page.tsx): MDX-based cover letter editor
+- [AI Writer Dialog](./src/components/ai-writer-dialog.tsx): Interface for AI-generated cover letters
+- [Sidebar Navigation](./src/components/app-sidebar.tsx): Application navigation and document management
+
+## Styling and Components
+
+- [Global Styles](./src/app/globals.css): Tailwind CSS configuration and custom styles
+- [UI Components](./src/components/ui/): Reusable Radix UI components (button, dialog, select, etc.)
+- [Theme Provider](./src/components/theme-provider.tsx): Dark/light mode support
+
+## Configuration
+
+- [Package Dependencies](./package.json): Next.js 16, React 19, TypeScript, Tailwind CSS 4, and specialized libraries
+- [TypeScript Config](./tsconfig.json): Project TypeScript configuration
+- [Next.js Config](./next.config.ts): Next.js application configuration
+- [Tailwind Config](./postcss.config.mjs): PostCSS and Tailwind CSS configuration
+
+## Optional
+
+- [PDF Export Hooks](./src/hooks/use-pdf-export.ts): React hooks for PDF generation functionality
+- [Cover Letter PDF Export](./src/hooks/use-cover-letter-pdf-export.ts): Specialized PDF export for cover letters
+- [Color Converter Utility](./src/lib/color-converter.ts): Color manipulation utilities for PDF generation
+- [Mobile Detection Hook](./src/hooks/use-mobile.ts): Responsive design utilities
+- [MDX Editor Components](./src/components/mdx-editor/): Custom MDX editor implementation

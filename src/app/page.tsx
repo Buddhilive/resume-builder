@@ -112,10 +112,10 @@ export default function Home() {
       <footer className="mt-20 border-t border-black/6 bg-transparent py-8 dark:border-white/6">
         <div className="mx-auto max-w-6xl px-6 text-sm text-zinc-600 dark:text-zinc-400">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <div>© {new Date().getFullYear()} Resume Builder — Free AI-powered resumes & cover letters</div>
+            <div>© {new Date().getFullYear()} Buddhi LIVE Resume Builder — Free AI-powered resumes & cover letters</div>
             <div className="flex items-center gap-4">
-              <a className="hover:underline" href="#">Privacy</a>
-              <a className="hover:underline" href="#">Terms</a>
+              <a className="hover:underline" href="https://www.buddhilive.com/privacy-policy/" target="_blank">Privacy</a>
+              <a className="hover:underline" href="https://www.buddhilive.com/terms-and-conditions/" target="_blank">Terms</a>
             </div>
           </div>
         </div>
